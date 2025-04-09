@@ -10,20 +10,20 @@ let galaxiaElegida;
 
 const frase = [
   {
-    arriba: 'Léeme',
+    arriba: 'Read me',
     abajo: '...',
   },
   {
-    arriba: 'Te dedico',
-    abajo: 'a un poema.',
+    arriba: 'Touch me',
+    abajo: '...',
   },
   {
-    arriba: 'Sé',
-    abajo: 'eterna.',
+    arriba: 'Be',
+    abajo: 'eternal...',
   },
   {
-    arriba: 'Y hazme',
-    abajo: 'el click.',
+    arriba: 'Click',
+    abajo: 'me...',
   }
 ];
 

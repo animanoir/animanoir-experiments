@@ -16,7 +16,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'src/index.html'),
         menu: resolve(__dirname, 'src/experiments/index.html'),
-        tjsBuddha: resolve(__dirname, 'src/experiments/threejs/index.html'),
+        tjsBuddha: resolve(__dirname, 'src/experiments/acidBuddha/index.html'),
       }
     }
   }
