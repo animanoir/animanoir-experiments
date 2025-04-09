@@ -14,6 +14,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
 
+
 /**
  * ========================================
  * POST-PROCESSING CONFIGURATION
@@ -111,6 +112,21 @@ const sizes = {
 const camera = new THREE.PerspectiveCamera(75, sizes.width/sizes.height) // FOV, aspect ratio
 camera.position.z = 2.0
 scene.add(camera)
+
+
+const listener = new THREE.AudioListener()
+camera.add(listener)
+
+const music = new THREE.Audio(listener)
+
+// load a sound and set it as the Audio object's buffer
+const audioLoader = new THREE.AudioLoader();
+audioLoader.load( '/musicsfx/acidBuddha.ogg', function( buffer ) {
+	music.setBuffer( buffer );
+	music.setLoop( true );
+	music.setVolume( 0.5 );
+	music.play();
+});
 
 /**
  * ========================================
