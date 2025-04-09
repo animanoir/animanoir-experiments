@@ -25,6 +25,9 @@ const guiParameters = {
   jhanaSpeedFactor: 1.0,
   openWebsite: function() {
     window.open('https://www.animanoir.xyz/', '_blank');
+  },
+  openMoreExperimentsWebsite: function() {
+    window.open('https://animanoir-experiments.netlify.app/', '_blank');
   }
 }
 gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((value) => {
@@ -33,6 +36,7 @@ gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((v
 gui.add(guiParameters, 'jhanaSpeedFactor').name('speed of the jhana').min(1.0).max(10.0).onChange((value) => {
   jhanaSpeedFactor = value
 })
+gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here,')
 gui.add(guiParameters, 'openWebsite').name('by animanoir.xyz')
 
 
