@@ -15,8 +15,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'src/index.html'),
-        menu: resolve(__dirname, 'src/experiments/index.html'),
         tjsBuddha: resolve(__dirname, 'src/experiments/acidBuddha/index.html'),
+        led: resolve(__dirname, 'src/experiments/led/index.html'),
       }
     }
   }
