@@ -6,6 +6,24 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js'
+
+
+const scene = new THREE.Scene();
+
+/**
+ * ========================================
+ * CAMERA SETUP
+ * ========================================
+ */
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight
+}
+
+const camera = new THREE.PerspectiveCamera(100, sizes.width/sizes.height) // FOV, aspect ratio
+camera.position.z = 1.5
+scene.add(camera)
 
 /**
  * ========================================
@@ -15,9 +33,18 @@ import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
 const unrealBloomPass = new UnrealBloomPass()
 unrealBloomPass.strength = 0.5
 unrealBloomPass.radius = 0.5
-unrealBloomPass.threshold = 0.5
+unrealBloomPass.threshold = 0.8
 
 const filmPass = new FilmPass()
+
+// Configure BokehPass with appropriate parameters
+const bokehPass = new BokehPass(scene, camera, {
+  focus: 1.2,        // Focus distance (adjust based on your scene)
+  aperture: 0.0025,  // Aperture - smaller values give more pronounced bokeh
+  maxblur: 0.01,     // Maximum blur amount
+  width: window.innerWidth,
+  height: window.innerHeight
+})
 
 /**
  * ========================================
@@ -37,7 +64,7 @@ function getPixelRatio(){
 let buddhaModel;
 const cubeTextureLoader = new THREE.CubeTextureLoader()
 const canvas = document.querySelector('canvas#maincanvas')
-const scene = new THREE.Scene();
+
 
 // Environment map
 const environmentMap = cubeTextureLoader.load([
@@ -87,7 +114,7 @@ gltfLoader.load('/models/buddha/scene.gltf', (model) => {
  */
 const textureLoader = new THREE.TextureLoader()
 const particlesTexture = textureLoader.load('https://threejs.org/examples/textures/sprites/circle.png')
-const particlesGeometry = new THREE.SphereGeometry(1.3, 22, 22)
+const particlesGeometry = new THREE.SphereGeometry(2, 32, 32)
 const particlesMaterial = new THREE.PointsMaterial({
   size: 0.005,
   sizeAttenuation: true,
@@ -130,19 +157,7 @@ const particles = new THREE.Points(particlesGeometry, particlesMaterial)
 scene.add(particles)
 
 
-/**
- * ========================================
- * CAMERA SETUP
- * ========================================
- */
-const sizes = {
-  width: window.innerWidth,
-  height: window.innerHeight
-}
 
-const camera = new THREE.PerspectiveCamera(100, sizes.width/sizes.height) // FOV, aspect ratio
-camera.position.z = 1.2
-scene.add(camera)
 
 /**
  * ========================================
@@ -272,6 +287,7 @@ effectComposer.setPixelRatio(getPixelRatio())
 const renderPass = new RenderPass(scene, camera)
 effectComposer.addPass(renderPass)
 effectComposer.addPass(unrealBloomPass)
+effectComposer.addPass(bokehPass)  // Add BokehPass
 effectComposer.addPass(filmPass)
 
 /**
@@ -284,16 +300,18 @@ function animate(){
   requestAnimationFrame(animate);
   const elapsedTime = mainClock.getElapsedTime();
 
-  particlesMaterial.size = Math.abs(Math.sin(elapsedTime) * 0.01)
+  particlesMaterial.size = Math.abs(Math.sin(elapsedTime) * 0.07)
 
-  particles.rotation.y = (elapsedTime * -1.0) * 0.8
+  particles.rotation.y = elapsedTime * 0.8
   
   // Apply drunken camera effect
   applyCameraDrunkenEffect(camera, elapsedTime, drunkenEffect);
   
   // Rotate model if loaded
   if (buddhaModel) {
-    buddhaModel.rotation.y = elapsedTime;
+    buddhaModel.rotation.y = (elapsedTime * -1.0) * 0.5;
+    buddhaModel.rotation.z = (elapsedTime * -1.0) * 0.5;
+    buddhaModel.rotation.x = (elapsedTime * -1.0) * 0.5;
     camera.lookAt(buddhaModel.position)
   }
   
