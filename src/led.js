@@ -5,7 +5,7 @@ let x = -200; //Eje x de la imagen para que se mueva.
 let alpha = 0; //Transparencia de la imagen para un efecto lindo de aparición.
 
 //Array of images
-const galaxias = ["./n1.jpg", "./n2.jpg", "./n3.jpg", "./n4.jpg"];
+const galaxias = ["/p5js/n1.jpg", "/p5js/n2.jpg", "/p5js/n3.jpg", "/p5js/n4.jpg"];
 let galaxiaElegida;
 
 const frase = [
@@ -18,8 +18,8 @@ const frase = [
     abajo: 'a un poema.',
   },
   {
-    arriba: 'Se',
-    abajo: 'eterno.',
+    arriba: 'Sé',
+    abajo: 'eterna.',
   },
   {
     arriba: 'Y hazme',
@@ -34,7 +34,7 @@ window.preload = function() {
   //Selecciona un index de galaxias al azar
   galaxiaElegida = Math.floor(random(galaxias.length));
   galaxia = loadImage(galaxias[galaxiaElegida]);
-  led = loadImage("./led-transparente.png");
+  led = loadImage("/p5js/led-transparente.png");
 };
 
 window.setup = function() {
