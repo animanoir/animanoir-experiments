@@ -2,10 +2,13 @@
   "name": "animanoir.github.io",
   "version": "1.0.0",
   "main": "index.js",
+  "homepage": "https://animanoir.github.io/animanoir-experiments/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "keywords": [],
   "author": "",
@@ -15,5 +18,8 @@
     "gsap": "^3.12.7",
     "three": "^0.175.0",
     "vite": "^6.2.5"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
