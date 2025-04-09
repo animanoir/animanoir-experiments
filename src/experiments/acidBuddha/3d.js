@@ -11,33 +11,57 @@ import gsap from 'gsap';
 import GUI from 'lil-gui';
 
 
+
 /**
  * ========================================
  * GUI
  * ========================================
 */
 let detachCamera
+let jhanaSpeedFactor = 1.0
 const gui = new GUI();
 const guiParameters = {
-  detachCamera: false
+  detachCamera: false,
+  jhanaSpeedFactor: 1.0
 }
 gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((value) => {
   detachCamera = value
 })
+gui.add(guiParameters, 'jhanaSpeedFactor').name('speed of the jhana').min(1.0).max(10.0).onChange((value) => {
+  jhanaSpeedFactor = value
+})
+
+
 
 /**
  * ========================================
  * LOADING MANAGER
  * ========================================
  */
+const loadingBar = document.querySelector('#loading-bar')
 const loadingManager = new THREE.LoadingManager(
   () => {
     console.log("loaded.")
     gsap.to(overlayMaterial.uniforms.uAlpha, {duration:3, value: 0, onComplete: () => {
       overlayMesh.visible = false;
     }})
+    loadingBar.classList.add('ended')
+    setTimeout(() => {
+      
+      loadingBar.remove()
+    }, 1500)
   },
-  () => {console.log("progress")},
+  (itemUrl, itemsLoaded, itemsTotal) => {
+    const progressRatio = itemsLoaded / itemsTotal
+    console.log("progress: "+ progressRatio)
+    if (progressRatio < 1){
+      loadingBar.innerHTML = "loading the Buddha: " + progressRatio
+    }else{
+      loadingBar.innerHTML = "fuck yeah the Buddha has loaded..."
+
+    }
+
+  },
 
 )
 
@@ -374,7 +398,7 @@ function animate(){
 
   particlesMaterial.size = Math.abs(Math.sin(elapsedTime) * 0.07)
 
-  particles.rotation.y = elapsedTime * 0.8
+  particles.rotation.y = elapsedTime * jhanaSpeedFactor
   
   // Apply drunken camera effect
   applyCameraDrunkenEffect(camera, elapsedTime, drunkenEffect);
@@ -409,6 +433,8 @@ function animate(){
     camera.quaternion.copy(originalCameraState.quaternion);
   }
 }
+
+
 
 
 
