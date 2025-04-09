@@ -15,7 +15,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'src/index.html'),
-        menu: resolve(__dirname, 'src/experiments/menu.html'),
+        menu: resolve(__dirname, 'src/experiments/index.html'),
         threejs: resolve(__dirname, 'src/experiments/threejs/index.html'),
         v0: resolve(__dirname, 'src/experiments/v0/v0.html'),
         vr1: resolve(__dirname, 'src/experiments/vr1/index.html'),
