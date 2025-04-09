@@ -22,7 +22,10 @@ let jhanaSpeedFactor = 1.0
 const gui = new GUI();
 const guiParameters = {
   detachCamera: false,
-  jhanaSpeedFactor: 1.0
+  jhanaSpeedFactor: 1.0,
+  openWebsite: function() {
+    window.open('https://www.animanoir.xyz/', '_blank');
+  }
 }
 gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((value) => {
   detachCamera = value
@@ -30,6 +33,7 @@ gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((v
 gui.add(guiParameters, 'jhanaSpeedFactor').name('speed of the jhana').min(1.0).max(10.0).onChange((value) => {
   jhanaSpeedFactor = value
 })
+gui.add(guiParameters, 'openWebsite').name('by animanoir.xyz')
 
 
 
