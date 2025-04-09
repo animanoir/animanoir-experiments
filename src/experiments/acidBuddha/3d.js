@@ -1,19 +1,11 @@
 console.log("3j.js running...")
 
-/**
- * ========================================
- * IMPORTS AND DEPENDENCIES
- * ========================================
- */
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import gsap from 'gsap'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
-
 
 /**
  * ========================================
@@ -88,16 +80,55 @@ gltfLoader.load('/models/buddha/scene.gltf', (model) => {
   console.error( error );
 } )
 
-// Commented out sphere code
-// const sphereGeometry = new THREE.SphereGeometry(1.5, 32, 32)
-// const sphereMaterial = new THREE.MeshBasicMaterial({
-//   color: 'red',
-//   wireframe: true
-// })
-// const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
-// sphereMesh.scale.set(5,5,5)
-// scene.add(sphereMesh)
-// console.info(sphereMesh.position.distanceTo(camera.position))
+/**
+ * ========================================
+ * PARTICLES
+ * ========================================
+ */
+const textureLoader = new THREE.TextureLoader()
+const particlesTexture = textureLoader.load('https://threejs.org/examples/textures/sprites/circle.png')
+const particlesGeometry = new THREE.SphereGeometry(1.3, 22, 22)
+const particlesMaterial = new THREE.PointsMaterial({
+  size: 0.005,
+  sizeAttenuation: true,
+  vertexColors: true,
+  map: particlesTexture,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending
+})
+
+// Generate random colors in the pink/blue/violet/white palette
+const colors = new Float32Array(particlesGeometry.attributes.position.count * 3)
+for (let i = 0; i < colors.length; i += 3) {
+  const colorType = Math.random()
+  if (colorType < 0.25) {
+    // Pink
+    colors[i] = 1.0
+    colors[i + 1] = 0.4 + Math.random() * 0.3
+    colors[i + 2] = 0.8 + Math.random() * 0.2
+  } else if (colorType < 0.5) {
+    // Blue
+    colors[i] = 0.3 + Math.random() * 0.2
+    colors[i + 1] = 0.5 + Math.random() * 0.3
+    colors[i + 2] = 1.0
+  } else if (colorType < 0.75) {
+    // Violet
+    colors[i] = 0.6 + Math.random() * 0.4
+    colors[i + 1] = 0.1 + Math.random() * 0.3
+    colors[i + 2] = 0.9 + Math.random() * 0.1
+  } else {
+    // White
+    colors[i] = 0.9 + Math.random() * 0.1
+    colors[i + 1] = 0.9 + Math.random() * 0.1
+    colors[i + 2] = 0.9 + Math.random() * 0.1
+  }
+}
+
+particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+const particles = new THREE.Points(particlesGeometry, particlesMaterial)
+scene.add(particles)
+
 
 /**
  * ========================================
@@ -109,10 +140,15 @@ const sizes = {
   height: window.innerHeight
 }
 
-const camera = new THREE.PerspectiveCamera(75, sizes.width/sizes.height) // FOV, aspect ratio
-camera.position.z = 2.0
+const camera = new THREE.PerspectiveCamera(100, sizes.width/sizes.height) // FOV, aspect ratio
+camera.position.z = 1.2
 scene.add(camera)
 
+/**
+ * ========================================
+ * AUDIO SETUP
+ * ========================================
+ */
 
 const listener = new THREE.AudioListener()
 camera.add(listener)
@@ -247,6 +283,10 @@ let mainClock = new THREE.Clock
 function animate(){
   requestAnimationFrame(animate);
   const elapsedTime = mainClock.getElapsedTime();
+
+  particlesMaterial.size = Math.abs(Math.sin(elapsedTime) * 0.01)
+
+  particles.rotation.y = (elapsedTime * -1.0) * 0.8
   
   // Apply drunken camera effect
   applyCameraDrunkenEffect(camera, elapsedTime, drunkenEffect);
@@ -276,6 +316,8 @@ function animate(){
     camera.quaternion.copy(originalCameraState.quaternion);
   }
 }
+
+
 
 animate();
 
