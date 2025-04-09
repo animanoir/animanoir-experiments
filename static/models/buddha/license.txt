@@ -1,0 +1,11 @@
+Model Information:
+* title:	First Photogrammetry with Buddha
+* source:	https://sketchfab.com/3d-models/first-photogrammetry-with-buddha-1298f5322801468c9e864005fe73b8a0
+* author:	default user (https://sketchfab.com/milanautica)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "First Photogrammetry with Buddha" (https://sketchfab.com/3d-models/first-photogrammetry-with-buddha-1298f5322801468c9e864005fe73b8a0) by default user (https://sketchfab.com/milanautica) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
