@@ -7,9 +7,78 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js'
+import gsap from 'gsap';
+import GUI from 'lil-gui';
 
 
+/**
+ * ========================================
+ * GUI
+ * ========================================
+*/
+let detachCamera
+const gui = new GUI();
+const guiParameters = {
+  detachCamera: false
+}
+gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((value) => {
+  detachCamera = value
+})
+
+/**
+ * ========================================
+ * LOADING MANAGER
+ * ========================================
+ */
+const loadingManager = new THREE.LoadingManager(
+  () => {
+    console.log("loaded.")
+    gsap.to(overlayMaterial.uniforms.uAlpha, {duration:3, value: 0, onComplete: () => {
+      overlayMesh.visible = false;
+    }})
+  },
+  () => {console.log("progress")},
+
+)
+
+
+/**
+ * ========================================
+ * MAIN MOTHERFUCKING SCENE
+ * ========================================
+ */
 const scene = new THREE.Scene();
+
+/**
+ * ========================================
+ * LOAD OVERLAY
+ * ========================================
+ */
+
+const overlayGeometry = new THREE.PlaneGeometry(window.innerWidth,window.innerHeight)
+const overlayMaterial = new THREE.ShaderMaterial({
+  transparent: true,
+  uniforms:{
+    uAlpha: {value: 1}
+  },
+  vertexShader: `
+    void main(){
+      gl_Position = vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uAlpha;
+    void main(){
+      gl_FragColor = vec4(0.0,0.0,0.0, uAlpha); 
+    }
+  `
+})
+const overlayMesh = new THREE.Mesh(overlayGeometry, overlayMaterial)
+// Add this line to ensure the overlay is rendered in front of everything
+overlayMesh.renderOrder = 999;
+// Make it a camera-facing plane that doesn't interfere with the scene's z-depth
+overlayMesh.position.z = 0;
+scene.add(overlayMesh)
 
 /**
  * ========================================
@@ -62,7 +131,7 @@ function getPixelRatio(){
  * ========================================
  */
 let buddhaModel;
-const cubeTextureLoader = new THREE.CubeTextureLoader()
+const cubeTextureLoader = new THREE.CubeTextureLoader(loadingManager)
 const canvas = document.querySelector('canvas#maincanvas')
 
 
@@ -98,14 +167,16 @@ scene.add(ambientLight);
  * MODEL LOADING
  * ========================================
  */
-const gltfLoader = new GLTFLoader();
+const gltfLoader = new GLTFLoader(loadingManager);
 gltfLoader.load('/models/buddha/scene.gltf', (model) => {
   console.info("Model loaded successfully.")
   buddhaModel = model.scenes[0]
+  
   scene.add(buddhaModel)
 }, undefined, function ( error ) { // undefined skips the onProgress function.
   console.error( error );
 } )
+
 
 /**
  * ========================================
@@ -122,6 +193,7 @@ const particlesMaterial = new THREE.PointsMaterial({
   map: particlesTexture,
   transparent: true,
   depthWrite: false,
+  depthTest: true,
   blending: THREE.AdditiveBlending
 })
 
@@ -188,9 +260,9 @@ audioLoader.load( '/musicsfx/acidBuddha.ogg', function( buffer ) {
 const drunkenEffect = {
   enabled: true,
   positionIntensity: 0.5,      // How much the camera position sways
-  rotationIntensity: 0.5,    // How much the camera rotation sways
+  rotationIntensity: 0.1,    // How much the camera rotation sways
   speed: 1.0,                // Speed of the swaying motion
-  complexity: 5              // How complex the movement patterns are (1-5)
+  complexity: 3              // How complex the movement patterns are (1-5)
 };
 
 // Container for original camera state
@@ -312,7 +384,10 @@ function animate(){
     buddhaModel.rotation.y = (elapsedTime * -1.0) * 0.5;
     buddhaModel.rotation.z = (elapsedTime * -1.0) * 0.5;
     buddhaModel.rotation.x = (elapsedTime * -1.0) * 0.5;
-    camera.lookAt(buddhaModel.position)
+    if (!detachCamera){
+      camera.lookAt(buddhaModel.position)
+
+    }
   }
   
   // Rotate environment map
