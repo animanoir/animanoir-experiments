@@ -1,25 +1,26 @@
-export default {
-  root: 'src/',
+import { defineConfig } from 'vite'
+import { resolve } from 'path'
+
+export default defineConfig({
+  root: './src',
   publicDir: '../static',
-  base: '/', // Ensure proper routing for Netlify
+  base: '/',
   server: {
-    host: true, // Open to local network and display URL
+    host: true,
   },
   build: {
     outDir: '../dist',
-    emptyOutDir: true, // Empty the folder first.
-    sourcemap: 'hidden', // Add sourcemap
+    emptyOutDir: true,
+    sourcemap: 'hidden',
     rollupOptions: {
       input: {
-        main: 'src/index.html',
-        menu: 'src/experiments/menu.html',
-        threejs: 'src/experiments/threejs/index.html',
-        v0: 'src/experiments/v0/v0.html',
-        vr1: 'src/experiments/vr1/index.html',
-        webAntigua: 'src/experiments/webAntigua/404.html' // Add other entry points as needed
+        main: resolve(__dirname, 'src/index.html'),
+        menu: resolve(__dirname, 'src/experiments/menu.html'),
+        threejs: resolve(__dirname, 'src/experiments/threejs/index.html'),
+        v0: resolve(__dirname, 'src/experiments/v0/v0.html'),
+        vr1: resolve(__dirname, 'src/experiments/vr1/index.html'),
+        webAntigua: resolve(__dirname, 'src/experiments/webAntigua/404.html')
       }
     }
   }
-}
-
-// A source map is a file that creates a mapping between your original source code and the minified/transformed code that runs in production.
+})
