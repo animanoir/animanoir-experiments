@@ -73,7 +73,8 @@ Tone.loaded().then(() => {
 const loadingBar = document.querySelector('#loading-bar')
 const loadingManager = new THREE.LoadingManager(
   () => {
-    // console.log("loaded.")
+    window.setTimeout(() => {
+          // console.log("loaded.")
     gsap.to(overlayMaterial.uniforms.uAlpha, {duration:3, value: 0, onComplete: () => {
       overlayMesh.visible = false;
     }})
@@ -82,7 +83,8 @@ const loadingManager = new THREE.LoadingManager(
       
       loadingBar.remove()
     }, 1500)
-  },
+    }, 500.0)
+  },  
   (itemUrl, itemsLoaded, itemsTotal) => {
     const progressRatio = itemsLoaded / itemsTotal
     // console.log("progress: "+ progressRatio)
