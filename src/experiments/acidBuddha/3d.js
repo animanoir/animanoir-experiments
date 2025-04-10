@@ -37,7 +37,7 @@ gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((v
 })
 gui.add(guiParameters, 'jhanaSpeedFactor').name('speed of the jhana').min(1.0).max(10.0).onChange((value) => {
   jhanaSpeedFactor = value
-  musicPlaybackRate = Math.max(0.5, 1 / value)
+  musicPlaybackRate = Math.max(0.3, 1 / value)
   samplePlayer.playbackRate = musicPlaybackRate
   buddhaSpeedRotation = Math.max(0.1, 1/value)
 
@@ -60,7 +60,6 @@ Tone.loaded().then(() => {
   samplePlayer.start();
   samplePlayer.playbackRate = musicPlaybackRate
 })
-console.log(musicPlaybackRate)
 
 /**
  * ========================================
@@ -70,7 +69,7 @@ console.log(musicPlaybackRate)
 const loadingBar = document.querySelector('#loading-bar')
 const loadingManager = new THREE.LoadingManager(
   () => {
-    console.log("loaded.")
+    // console.log("loaded.")
     gsap.to(overlayMaterial.uniforms.uAlpha, {duration:3, value: 0, onComplete: () => {
       overlayMesh.visible = false;
     }})
@@ -82,7 +81,7 @@ const loadingManager = new THREE.LoadingManager(
   },
   (itemUrl, itemsLoaded, itemsTotal) => {
     const progressRatio = itemsLoaded / itemsTotal
-    console.log("progress: "+ progressRatio)
+    // console.log("progress: "+ progressRatio)
     if (progressRatio < 1){
       loadingBar.innerHTML = "loading the Buddha: " + progressRatio
     }else{
@@ -222,7 +221,7 @@ scene.add(ambientLight);
  */
 const gltfLoader = new GLTFLoader(loadingManager);
 gltfLoader.load('/models/buddha/scene.gltf', (model) => {
-  console.info("Model loaded successfully.")
+  // console.info("Model loaded successfully.")
   buddhaModel = model.scenes[0]
   
   scene.add(buddhaModel)
@@ -379,7 +378,7 @@ renderer.render(scene, camera)
  * ========================================
  */
 const handleResize = () => {
-  console.log("Window is being resized...")
+  // console.log("Window is being resized...")
   sizes.width = window.innerWidth;
   sizes.height = window.innerHeight;
   
