@@ -9,8 +9,9 @@ import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js'
 import gsap from 'gsap';
 import GUI from 'lil-gui';
+import * as Tone from "tone"
 
-
+let musicPlaybackRate = 1.0
 
 /**
  * ========================================
@@ -35,11 +36,29 @@ gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((v
 })
 gui.add(guiParameters, 'jhanaSpeedFactor').name('speed of the jhana').min(1.0).max(10.0).onChange((value) => {
   jhanaSpeedFactor = value
+  musicPlaybackRate = 1 / value
+  samplePlayer.playbackRate = musicPlaybackRate
+
 })
 gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here,')
 gui.add(guiParameters, 'openWebsite').name('by animanoir.xyz')
 
+/**
+ * ========================================
+ * MUSIC/SFX
+ * ========================================
+*/
 
+const samplePlayer = new Tone.Player({
+  url: "/musicsfx/acidBuddha.ogg",
+  loop: true
+}
+).toDestination()
+Tone.loaded().then(() => {
+  samplePlayer.start();
+  samplePlayer.playbackRate = musicPlaybackRate
+})
+console.log(musicPlaybackRate)
 
 /**
  * ========================================
@@ -269,19 +288,19 @@ scene.add(particles)
  * ========================================
  */
 
-const listener = new THREE.AudioListener()
-camera.add(listener)
+// const listener = new THREE.AudioListener()
+// camera.add(listener)
 
-const music = new THREE.Audio(listener)
+// const music = new THREE.Audio(listener)
 
-// load a sound and set it as the Audio object's buffer
-const audioLoader = new THREE.AudioLoader();
-audioLoader.load( '/musicsfx/acidBuddha.ogg', function( buffer ) {
-	music.setBuffer( buffer );
-	music.setLoop( true );
-	music.setVolume( 0.5 );
-	music.play();
-});
+// // load a sound and set it as the Audio object's buffer
+// const audioLoader = new THREE.AudioLoader();
+// audioLoader.load( '/musicsfx/acidBuddha.ogg', function( buffer ) {
+// 	music.setBuffer( buffer );
+// 	music.setLoop( true );
+// 	music.setVolume( 0.5 );
+// 	music.play();
+// });
 
 /**
  * ========================================
