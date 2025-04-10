@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
+import glsl from 'vite-plugin-glsl'
 
 export default defineConfig({
   root: './src',
@@ -19,5 +20,9 @@ export default defineConfig({
         led: resolve(__dirname, 'src/experiments/led/index.html'),
       }
     }
-  }
+  },
+  plugins:[
+    glsl()
+  ]
+
 })

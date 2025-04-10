@@ -14,6 +14,7 @@ import * as Tone from "tone"
 let musicPlaybackRate = 1.0
 let buddhaSpeedRotation = 0.5
 let fovValue = 100
+let isMusicOn = true
 
 /**
  * ========================================
@@ -31,7 +32,8 @@ const guiParameters = {
   },
   openMoreExperimentsWebsite: function() {
     window.open('https://animanoir-experiments.netlify.app/', '_blank');
-  }
+  },
+  isMusicOn: true
 }
 gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((value) => {
   detachCamera = value
@@ -48,6 +50,21 @@ gui.add(guiParameters, 'jhanaSpeedFactor').name('speed of the jhana').min(1.0).m
 })
 gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here')
 gui.add(guiParameters, 'openWebsite').name('by animanoir.xyz')
+gui.add(guiParameters , 'isMusicOn').name('Music:').onChange((value) => {
+  isMusicOn = value;
+  if (isMusicOn) {
+    // Only start if Tone.js is ready
+    if (Tone.loaded()) {
+      samplePlayer.start();
+    } else {
+      Tone.loaded().then(() => {
+        samplePlayer.start();
+      });
+    }
+  } else {
+    samplePlayer.stop();
+  }
+})
 
 /**
  * ========================================
@@ -432,7 +449,7 @@ effectComposer.setPixelRatio(getPixelRatio())
 const renderPass = new RenderPass(scene, camera)
 effectComposer.addPass(renderPass)
 effectComposer.addPass(unrealBloomPass)
-effectComposer.addPass(bokehPass)  // Add BokehPass
+effectComposer.addPass(bokehPass)
 effectComposer.addPass(filmPass)
 
 /**
