@@ -12,6 +12,7 @@ import GUI from 'lil-gui';
 import * as Tone from "tone"
 
 let musicPlaybackRate = 1.0
+let buddhaSpeedRotation = 0.5
 
 /**
  * ========================================
@@ -36,8 +37,9 @@ gui.add(guiParameters, 'detachCamera').name('float with the buddha').onChange((v
 })
 gui.add(guiParameters, 'jhanaSpeedFactor').name('speed of the jhana').min(1.0).max(10.0).onChange((value) => {
   jhanaSpeedFactor = value
-  musicPlaybackRate = 1 / value
+  musicPlaybackRate = Math.max(0.5, 1 / value)
   samplePlayer.playbackRate = musicPlaybackRate
+  buddhaSpeedRotation = Math.max(0.1, 1/value)
 
 })
 gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here,')
@@ -432,9 +434,9 @@ function animate(){
   
   // Rotate model if loaded
   if (buddhaModel) {
-    buddhaModel.rotation.y = (elapsedTime * -1.0) * 0.5;
-    buddhaModel.rotation.z = (elapsedTime * -1.0) * 0.5;
-    buddhaModel.rotation.x = (elapsedTime * -1.0) * 0.5;
+    buddhaModel.rotation.y = (elapsedTime * -1.0) * buddhaSpeedRotation;
+    buddhaModel.rotation.z = (elapsedTime * -1.0) * buddhaSpeedRotation;
+    buddhaModel.rotation.x = (elapsedTime * -1.0) * buddhaSpeedRotation;
     if (!detachCamera){
       camera.lookAt(buddhaModel.position)
 
