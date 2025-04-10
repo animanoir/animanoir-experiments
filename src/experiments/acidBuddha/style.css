@@ -24,6 +24,7 @@ body {
   padding-left: 5rem;
   font-size: 3rem;
   color: white;
+  will-change: opacity;
 }
 
 #loading-bar.ended {

@@ -13,6 +13,7 @@ import * as Tone from "tone"
 
 let musicPlaybackRate = 1.0
 let buddhaSpeedRotation = 0.5
+let fovValue = 100
 
 /**
  * ========================================
@@ -40,9 +41,12 @@ gui.add(guiParameters, 'jhanaSpeedFactor').name('speed of the jhana').min(1.0).m
   musicPlaybackRate = Math.max(0.3, 1 / value)
   samplePlayer.playbackRate = musicPlaybackRate
   buddhaSpeedRotation = Math.max(0.1, 1/value)
+  fovValue = mapRange(value, 1, 10, 100, 110)
+  camera.fov = fovValue
+  camera.updateProjectionMatrix()
 
 })
-gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here,')
+gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here')
 gui.add(guiParameters, 'openWebsite').name('by animanoir.xyz')
 
 /**
@@ -142,7 +146,7 @@ const sizes = {
   height: window.innerHeight
 }
 
-const camera = new THREE.PerspectiveCamera(100, sizes.width/sizes.height) // FOV, aspect ratio
+const camera = new THREE.PerspectiveCamera(fovValue, sizes.width/sizes.height) // FOV, aspect ratio
 camera.position.z = 1.5
 scene.add(camera)
 
@@ -175,6 +179,21 @@ const bokehPass = new BokehPass(scene, camera, {
 function getPixelRatio(){
   // Using Math.min prevents a pixel ratio upper than 2, which is unnecessary
   return Math.min(window.devicePixelRatio, 2) 
+}
+/**
+ * Maps a value from one range to another
+ * @param {number} value - The value to map
+ * @param {number} fromMin - The minimum of the input range
+ * @param {number} fromMax - The maximum of the input range
+ * @param {number} toMin - The minimum of the output range
+ * @param {number} toMax - The maximum of the output range
+ * @returns {number} - The mapped value
+ */
+function mapRange(value, fromMin, fromMax, toMin, toMax) {
+  // First normalize the value to 0-1 range
+  const normalizedValue = (value - fromMin) / (fromMax - fromMin);
+  // Then scale to target range
+  return toMin + normalizedValue * (toMax - toMin);
 }
 
 /**
