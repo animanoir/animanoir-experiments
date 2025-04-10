@@ -1,0 +1,33 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  overflow: hidden;
+}
+
+#maincanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  outline: none;
+}
+
+#loading-bar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  padding-left: 5rem;
+  font-size: 3rem;
+  color: white;
+  will-change: opacity;
+}
+
+#loading-bar.ended {
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
