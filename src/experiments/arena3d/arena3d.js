@@ -322,7 +322,8 @@ fetchArenaImages('metaxis-digital').then(images => {
       const simplePlaneGeometry = new THREE.PlaneGeometry();
       const simplePlaneMaterial = new THREE.MeshBasicMaterial({
         map: texture,
-        transparent: true
+        transparent: true,
+        side: THREE.DoubleSide
       });
       const simplePlaneMesh = new THREE.Mesh(simplePlaneGeometry, simplePlaneMaterial);
       simplePlaneMesh.position.x = (Math.random() - 0.5) * 6.0
