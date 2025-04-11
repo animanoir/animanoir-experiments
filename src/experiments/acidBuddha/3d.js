@@ -23,7 +23,7 @@ let isMusicOn = true
 */
 let detachCamera
 let jhanaSpeedFactor = 1.0
-const gui = new GUI();
+const gui = new GUI({title: "Acid Buddha"});
 const guiParameters = {
   detachCamera: false,
   jhanaSpeedFactor: 1.0,

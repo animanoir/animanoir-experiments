@@ -8,6 +8,9 @@ import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js'
 import gsap from 'gsap';
 import GUI from 'lil-gui';
 import * as Tone from "tone"
+import { FlyControls } from 'three/addons/controls/FlyControls.js';
+
+
 
 
 /**
@@ -16,7 +19,7 @@ import * as Tone from "tone"
  * ========================================
 */
 
-let musicPlaybackRate = 1.0
+let musicPlaybackRate = 0.5
 let fovValue = 100
 let isMusicOn = true
 
@@ -26,10 +29,8 @@ let isMusicOn = true
  * GUI
  * ========================================
 */
-const gui = new GUI();
+const gui = new GUI({title: "Arena 3D"});
 const guiParameters = {
-  detachCamera: false,
-  jhanaSpeedFactor: 1.0,
   openWebsite: function() {
     window.open('https://www.animanoir.xyz/', '_blank');
   },
@@ -72,6 +73,48 @@ Tone.loaded().then(() => {
   samplePlayer.start();
   samplePlayer.playbackRate = musicPlaybackRate
 })
+
+// Object that stores keys pressed.
+let keysPressed = {}
+
+function handleKeyDown(event){
+  keysPressed[event.code] = true
+  changePlaybackRate(event)
+}
+
+function handleKeyUp(event){
+  delete keysPressed[event.code]
+  if(Object.keys(keysPressed).length === 0){
+    gsap.to(samplePlayer, {
+      duration: 0.2,
+      playbackRate: 0.5,
+      ease: "power2.out"
+    })
+  }
+}
+
+function changePlaybackRate(event){
+  if(event.code === "KeyW" || event.button == 0){
+    
+    gsap.to(samplePlayer, {
+      duration: 0.2,
+      playbackRate: 1.0,
+      ease: "power2.out"
+    })
+  } else if(event.code === "KeyS" || event.button == 2) {
+    gsap.to(samplePlayer, {
+      duration: 0.2,
+      playbackRate: 1.0,
+      ease: "power2.out"
+    })
+  } 
+}
+
+window.addEventListener('keydown', handleKeyDown)
+window.addEventListener('mousedown', handleKeyDown)
+window.addEventListener('keyup', handleKeyUp)
+window.addEventListener('mouseup', handleKeyUp)
+
 
 /**
  * ========================================
@@ -157,7 +200,7 @@ const sizes = {
 }
 
 const camera = new THREE.PerspectiveCamera(fovValue, sizes.width/sizes.height) // FOV, aspect ratio
-camera.position.z = 2.0
+camera.position.z = 5.0
 scene.add(camera)
 
 /**
@@ -201,6 +244,61 @@ function mapRange(value, fromMin, fromMax, toMin, toMax) {
   return toMin + normalizedValue * (toMax - toMin);
 }
 
+const fetchArenaImages = async () => {
+  return fetch(`https://api.are.na/v2/channels/metaxis-digital/contents?per=30&sort=position&direction=desc`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('There was an error fetching from Are.na.');
+      }
+      return response.json();
+    })
+    .then(data => {
+      const { contents } = data;
+      return contents;
+    })
+    .catch(error => {
+      console.error('Error fetching images from Are.na:', error);
+      return [];
+    });
+}
+
+// Use the Promise with .then()
+fetchArenaImages().then(images => {
+  console.info('Arena images loaded:', images);
+  
+  if (images && images.length > 0) {
+
+    images.map((img => {    
+    // Create an image element and texture
+    const isGif = img.image?.original?.url?.toLowerCase().endsWith('.gif');
+    const image = new Image();
+    image.crossOrigin = "Anonymous"; // Important for CORS
+    image.src = img.image?.display?.url || img.image?.original?.url;
+    
+    const texture = new THREE.Texture(image);
+    texture.mipmaps = false
+    
+    // Update texture when the image loads
+    image.onload = () => {
+      texture.needsUpdate = true;
+      // Create and add the plane with the texture
+      const simplePlaneGeometry = new THREE.PlaneGeometry();
+      const simplePlaneMaterial = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true
+      });
+      const simplePlaneMesh = new THREE.Mesh(simplePlaneGeometry, simplePlaneMaterial);
+      simplePlaneMesh.position.x = (Math.random() - 0.5) * 5.0
+      simplePlaneMesh.position.y = (Math.random() - 0.5) * 5.0
+      simplePlaneMesh.position.z = Math.random() * 5 - 3
+      scene.add(simplePlaneMesh);
+      simplePlaneMesh.lookAt(camera.position)
+      
+    };
+    }))
+  }
+});
+
 /**
  * ========================================
  * SCENE AND ENVIRONMENT SETUP
@@ -232,42 +330,6 @@ scene.environmentIntensity = 5.0
 const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
 scene.add(ambientLight);
 
-// Add directional light
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-// directionalLight.position.set(1, 2, 3);
-// scene.add(directionalLight);
-
-
-
-/**
- * ========================================
- * PARTICLES
- * ========================================
- */
-const textureLoader = new THREE.TextureLoader()
-
-
-
-/**
- * ========================================
- * AUDIO SETUP
- * ========================================
- */
-
-// const listener = new THREE.AudioListener()
-// camera.add(listener)
-
-// const music = new THREE.Audio(listener)
-
-// // load a sound and set it as the Audio object's buffer
-// const audioLoader = new THREE.AudioLoader();
-// audioLoader.load( '/musicsfx/acidBuddha.ogg', function( buffer ) {
-// 	music.setBuffer( buffer );
-// 	music.setLoop( true );
-// 	music.setVolume( 0.5 );
-// 	music.play();
-// });
-
 /**
  * ========================================
  * CAMERA EFFECTS CONFIGURATION
@@ -276,7 +338,7 @@ const textureLoader = new THREE.TextureLoader()
 // Drunken camera effect configuration
 const drunkenEffect = {
   enabled: true,
-  positionIntensity: 0.5,      // How much the camera position sways
+  positionIntensity: 0.1,      // How much the camera position sways
   rotationIntensity: 0.1,    // How much the camera rotation sways
   speed: 1.0,                // Speed of the swaying motion
   complexity: 3              // How complex the movement patterns are (1-5)
@@ -337,6 +399,21 @@ renderer.setPixelRatio(getPixelRatio())
 renderer.setSize(sizes.width, sizes.height)
 renderer.render(scene, camera)
 
+
+/**
+ * ========================================
+ * CONTROLS
+ * ========================================
+ */
+let controls
+
+controls = new FlyControls( camera, renderer.domElement);
+
+controls.movementSpeed = 0.5;
+controls.rollSpeed = 0.3;
+controls.autoForward = false;
+controls.dragToLook = false;
+
 /**
  * ========================================
  * WINDOW RESIZE HANDLING
@@ -385,8 +462,11 @@ effectComposer.addPass(filmPass)
  * ========================================
  */
 let mainClock = new THREE.Clock
+let delta 
 function animate(){
   requestAnimationFrame(animate);
+  delta = mainClock.getDelta()
+  controls.update( delta );
   const elapsedTime = mainClock.getElapsedTime();
   
   // controls.update();
@@ -394,7 +474,7 @@ function animate(){
   // Apply drunken camera effect
   applyCameraDrunkenEffect(camera, elapsedTime, drunkenEffect);
 
-  camera.lookAt(0,0,0)
+  // camera.lookAt(0,0,0)
   
   // Rotate environment map
   // if(environmentMap){
@@ -417,64 +497,22 @@ function animate(){
 }
 
 
-const fetchArenaImages = async () => {
-  return fetch(`https://api.are.na/v2/channels/metaxis-digital/contents?per=20&sort=position&direction=desc`)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('There was an error fetching from Are.na.');
-      }
-      return response.json();
-    })
-    .then(data => {
-      const { contents } = data;
-      return contents;
-    })
-    .catch(error => {
-      console.error('Error fetching images from Are.na:', error);
-      return [];
-    });
-}
 
-// Use the Promise with .then()
-fetchArenaImages().then(images => {
-  console.info('Arena images loaded:', images);
-  
-  if (images && images.length > 0) {
-
-    images.map((img => {    
-    // Create an image element and texture
-    const image = new Image();
-    image.crossOrigin = "Anonymous"; // Important for CORS
-    image.src = img.image?.display?.url || img.image?.original?.url;
-    
-    const texture = new THREE.Texture(image);
-    
-    // Update texture when the image loads
-    image.onload = () => {
-      texture.needsUpdate = true;
-      
-      // Create and add the plane with the texture
-      const simplePlaneGeometry = new THREE.PlaneGeometry();
-      const simplePlaneMaterial = new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true
-      });
-      const simplePlaneMesh = new THREE.Mesh(simplePlaneGeometry, simplePlaneMaterial);
-      simplePlaneMesh.position.x = (Math.random() - 0.5) * 5.0
-      simplePlaneMesh.position.y = (Math.random() - 0.5) * 5.0
-      simplePlaneMesh.position.z = Math.random() * 5 - 3
-      scene.add(simplePlaneMesh);
-      simplePlaneMesh.lookAt(camera.position)
-    };
-    }))
-  }
-});
 
 
 
 
 
 animate();
+
+
+
+
+
+
+
+
+
 
 /**
  * ========================================
