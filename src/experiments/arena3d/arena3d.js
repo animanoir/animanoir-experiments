@@ -178,7 +178,7 @@ const loadingManager = new THREE.LoadingManager(
     if (progressRatio < 1){
       loadingBar.innerHTML = "loading: " + progressRatio
     }else{
-      loadingBar.innerHTML = "fuck yeah everything is loaded..."
+      loadingBar.innerHTML = "what are your dreams made of?"
 
     }
 
