@@ -22,7 +22,7 @@ import { FlyControls } from 'three/addons/controls/FlyControls.js';
 let musicPlaybackRate = 0.5
 let fovValue = 100
 let isMusicOn = true
-
+let cumulativeChannelZ = 1
 
 /**
  * ========================================
@@ -44,7 +44,7 @@ const guiParameters = {
 gui.add(guiParameters, 'channel').name("Enter the Are.na channel URL slug:").onFinishChange((channel) => {
   fetchArenaImages(channel).then(images => {
     // console.info('Arena images loaded:', images);
-    
+    cumulativeChannelZ++
     if (images && images.length > 0) {
   
       images.map((img => {    
@@ -69,7 +69,7 @@ gui.add(guiParameters, 'channel').name("Enter the Are.na channel URL slug:").onF
         const simplePlaneMesh = new THREE.Mesh(simplePlaneGeometry, simplePlaneMaterial);
         simplePlaneMesh.position.x = (Math.random() - 0.5) * 5.0
         simplePlaneMesh.position.y = (Math.random() - 0.5) * 5.0
-        simplePlaneMesh.position.z = Math.random() * 5 - 3
+        simplePlaneMesh.position.z = Math.random() * 5 - 3 * cumulativeChannelZ
         scene.add(simplePlaneMesh);
         simplePlaneMesh.lookAt(camera.position)
         
