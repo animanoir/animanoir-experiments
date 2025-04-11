@@ -29,8 +29,9 @@ let isMusicOn = true
  * GUI
  * ========================================
 */
-const gui = new GUI({title: "Arena 3D"});
+const gui = new GUI({title: "Arena 3D", width: 350});
 const guiParameters = {
+  channel: "metaxis-digital",
   openWebsite: function() {
     window.open('https://www.animanoir.xyz/', '_blank');
   },
@@ -40,6 +41,43 @@ const guiParameters = {
   isMusicOn: true
 }
 
+gui.add(guiParameters, 'channel').name("Enter the Are.na channel URL slug:").onFinishChange((channel) => {
+  fetchArenaImages(channel).then(images => {
+    // console.info('Arena images loaded:', images);
+    
+    if (images && images.length > 0) {
+  
+      images.map((img => {    
+      // Create an image element and texture
+      const isGif = img.image?.original?.url?.toLowerCase().endsWith('.gif');
+      const image = new Image();
+      image.crossOrigin = "Anonymous"; // Important for CORS
+      image.src = img.image?.display?.url || img.image?.original?.url;
+      
+      const texture = new THREE.Texture(image);
+      texture.mipmaps = false
+      
+      // Update texture when the image loads
+      image.onload = () => {
+        texture.needsUpdate = true;
+        // Create and add the plane with the texture
+        const simplePlaneGeometry = new THREE.PlaneGeometry();
+        const simplePlaneMaterial = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true
+        });
+        const simplePlaneMesh = new THREE.Mesh(simplePlaneGeometry, simplePlaneMaterial);
+        simplePlaneMesh.position.x = (Math.random() - 0.5) * 5.0
+        simplePlaneMesh.position.y = (Math.random() - 0.5) * 5.0
+        simplePlaneMesh.position.z = Math.random() * 5 - 3
+        scene.add(simplePlaneMesh);
+        simplePlaneMesh.lookAt(camera.position)
+        
+      };
+      }))
+    }
+  });
+} )
 gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here')
 gui.add(guiParameters, 'openWebsite').name('by animanoir.xyz')
 gui.add(guiParameters , 'isMusicOn').name('Music:').onChange((value) => {
@@ -97,9 +135,7 @@ function changePlaybackRate(event){
   if(event.code === "KeyW" 
     || event.code === "KeyA" 
     || event.code === "KeyD" 
-    || event.code === "KeyS" 
-    || event.button === 0 
-    || event.button === 2){
+    || event.code === "KeyS" ){
 
     gsap.to(samplePlayer, {
       duration: 0.2,
@@ -111,9 +147,9 @@ function changePlaybackRate(event){
 }
 
 window.addEventListener('keydown', handleKeyDown)
-window.addEventListener('mousedown', handleKeyDown)
+// window.addEventListener('mousedown', handleKeyDown)
 window.addEventListener('keyup', handleKeyUp)
-window.addEventListener('mouseup', handleKeyUp)
+// window.addEventListener('mouseup', handleKeyUp)
 
 
 /**
@@ -244,8 +280,8 @@ function mapRange(value, fromMin, fromMax, toMin, toMax) {
   return toMin + normalizedValue * (toMax - toMin);
 }
 
-const fetchArenaImages = async () => {
-  return fetch(`https://api.are.na/v2/channels/metaxis-digital/contents?per=30&sort=position&direction=desc`)
+const fetchArenaImages = async (channel) => {
+  return fetch(`https://api.are.na/v2/channels/${channel}/contents?per=30&sort=position&direction=desc`)
     .then(response => {
       if (!response.ok) {
         throw new Error('There was an error fetching from Are.na.');
@@ -263,7 +299,7 @@ const fetchArenaImages = async () => {
 }
 
 // Use the Promise with .then()
-fetchArenaImages().then(images => {
+fetchArenaImages('metaxis-digital').then(images => {
   console.info('Arena images loaded:', images);
   
   if (images && images.length > 0) {
@@ -412,7 +448,7 @@ controls = new FlyControls( camera, renderer.domElement);
 controls.movementSpeed = 0.5;
 controls.rollSpeed = 0.3;
 controls.autoForward = false;
-controls.dragToLook = false;
+controls.dragToLook = true;
 
 /**
  * ========================================
