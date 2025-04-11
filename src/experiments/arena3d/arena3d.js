@@ -94,20 +94,20 @@ function handleKeyUp(event){
 }
 
 function changePlaybackRate(event){
-  if(event.code === "KeyW" || event.button == 0){
-    
+  if(event.code === "KeyW" 
+    || event.code === "KeyA" 
+    || event.code === "KeyD" 
+    || event.code === "KeyS" 
+    || event.button === 0 
+    || event.button === 2){
+
     gsap.to(samplePlayer, {
       duration: 0.2,
       playbackRate: 1.0,
       ease: "power2.out"
     })
-  } else if(event.code === "KeyS" || event.button == 2) {
-    gsap.to(samplePlayer, {
-      duration: 0.2,
-      playbackRate: 1.0,
-      ease: "power2.out"
-    })
-  } 
+
+  }
 }
 
 window.addEventListener('keydown', handleKeyDown)
