@@ -23,13 +23,14 @@ let musicPlaybackRate = 0.5
 let fovValue = 100
 let isMusicOn = true
 let cumulativeChannelZ = 1
+let loadingChannelData = false
 
 /**
  * ========================================
  * GUI
  * ========================================
 */
-const gui = new GUI({title: "Arena 3D", width: 350});
+const gui = new GUI({title: "Arena 3D", width: 450});
 const guiParameters = {
   channel: "metaxis-digital",
   openWebsite: function() {
@@ -41,7 +42,7 @@ const guiParameters = {
   isMusicOn: true
 }
 
-gui.add(guiParameters, 'channel').name("Enter the Are.na channel URL slug:").onFinishChange((channel) => {
+gui.add(guiParameters, 'channel').name("Enter the slug of your Are.na channel and click elsewhere:").onFinishChange((channel) => {
   fetchArenaImages(channel).then(images => {
     // console.info('Arena images loaded:', images);
     cumulativeChannelZ++
@@ -49,7 +50,7 @@ gui.add(guiParameters, 'channel').name("Enter the Are.na channel URL slug:").onF
   
       images.map((img => {    
       // Create an image element and texture
-      const isGif = img.image?.original?.url?.toLowerCase().endsWith('.gif');
+      // const isGif = img.image?.original?.url?.toLowerCase().endsWith('.gif');
       const image = new Image();
       image.crossOrigin = "Anonymous"; // Important for CORS
       image.src = img.image?.display?.url || img.image?.original?.url;
@@ -95,6 +96,8 @@ gui.add(guiParameters , 'isMusicOn').name('Music:').onChange((value) => {
     samplePlayer.stop();
   }
 })
+
+
 
 /**
  * ========================================
@@ -162,7 +165,7 @@ const loadingManager = new THREE.LoadingManager(
   () => {
     window.setTimeout(() => {
           // console.log("loaded.")
-    gsap.to(overlayMaterial.uniforms.uAlpha, {duration:3, value: 0, onComplete: () => {
+    gsap.to(overlayMaterial.uniforms.uAlpha, {duration:5, value: 0, onComplete: () => {
       overlayMesh.visible = false;
     }})
     loadingBar.classList.add('ended')
@@ -281,6 +284,8 @@ function mapRange(value, fromMin, fromMax, toMin, toMax) {
 }
 
 const fetchArenaImages = async (channel) => {
+  loadingChannelData = true
+  console.log("Loading channel data: "+ loadingChannelData)
   return fetch(`https://api.are.na/v2/channels/${channel}/contents?per=30&sort=position&direction=desc`)
     .then(response => {
       if (!response.ok) {
@@ -290,10 +295,16 @@ const fetchArenaImages = async (channel) => {
     })
     .then(data => {
       const { contents } = data;
+      loadingChannelData = false;
+  console.log("Loading channel data: "+loadingChannelData)
+
       return contents;
     })
     .catch(error => {
       console.error('Error fetching images from Are.na:', error);
+      loadingChannelData = false;
+  console.log("Loading channel data: "+loadingChannelData)
+
       return [];
     });
 }
@@ -301,13 +312,11 @@ const fetchArenaImages = async (channel) => {
 // Use the Promise with .then()
 
 fetchArenaImages('metaxis-digital').then(images => {
-  console.info('Arena images loaded:', images);
-  
+  // console.info('Arena images loaded:', images);
   if (images && images.length > 0) {
 
     images.map((img => {    
     // Create an image element and texture
-    const isGif = img.image?.original?.url?.toLowerCase().endsWith('.gif');
     const image = new Image();
     image.crossOrigin = "Anonymous"; // Important for CORS
     image.src = img.image?.display?.url || img.image?.original?.url;
@@ -507,22 +516,12 @@ function animate(){
   controls.update( delta );
   const elapsedTime = mainClock.getElapsedTime();
   
-  // controls.update();
+
   
   // Apply drunken camera effect
   applyCameraDrunkenEffect(camera, elapsedTime, drunkenEffect);
 
-  // camera.lookAt(0,0,0)
-  
-  // Rotate environment map
-  // if(environmentMap){
-  //   scene.environmentRotation.x = elapsedTime * 5.0;
-  //   // scene.environmentRotation.y = elapsedTime * 5.0;
-  //   // scene.environmentRotation.z = elapsedTime;
-  // }
 
-  // Controls update (commented out)
-  // controls.update();
   
   // Render the scene
   effectComposer.render()
