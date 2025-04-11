@@ -408,6 +408,7 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setPixelRatio(getPixelRatio())
 renderer.setSize(sizes.width, sizes.height)
+renderer.shadowMap.autoUpdate = false
 renderer.render(scene, camera)
 
 /**

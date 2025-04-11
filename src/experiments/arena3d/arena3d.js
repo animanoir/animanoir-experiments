@@ -9,6 +9,7 @@ import gsap from 'gsap';
 import GUI from 'lil-gui';
 import * as Tone from "tone"
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 
 
@@ -24,6 +25,8 @@ let fovValue = 100
 let isMusicOn = true
 let cumulativeChannelZ = 1
 let loadingChannelData = false
+const simplePlaneGeometry = new THREE.PlaneGeometry();
+
 
 /**
  * ========================================
@@ -62,7 +65,6 @@ gui.add(guiParameters, 'channel').name("Enter the slug of your Are.na channel an
       image.onload = () => {
         texture.needsUpdate = true;
         // Create and add the plane with the texture
-        const simplePlaneGeometry = new THREE.PlaneGeometry();
         const simplePlaneMaterial = new THREE.MeshBasicMaterial({
           map: texture,
           transparent: true
@@ -327,8 +329,6 @@ fetchArenaImages('metaxis-digital').then(images => {
     // Update texture when the image loads
     image.onload = () => {
       texture.needsUpdate = true;
-      // Create and add the plane with the texture
-      const simplePlaneGeometry = new THREE.PlaneGeometry();
       const simplePlaneMaterial = new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
@@ -444,6 +444,7 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setPixelRatio(getPixelRatio())
 renderer.setSize(sizes.width, sizes.height)
+renderer.shadowMap.autoUpdate = false
 renderer.render(scene, camera)
 
 
