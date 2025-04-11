@@ -42,7 +42,8 @@ const guiParameters = {
   openMoreExperimentsWebsite: function() {
     window.open('https://animanoir-experiments.netlify.app/', '_blank');
   },
-  isMusicOn: true
+  isMusicOn: true,
+  controls: "Move: WASD keys | Look: Drag mouse"
 }
 
 gui.add(guiParameters, 'channel').name("Enter the slug of your Are.na channel and click elsewhere:").onFinishChange((channel) => {
@@ -83,6 +84,7 @@ gui.add(guiParameters, 'channel').name("Enter the slug of your Are.na channel an
 } )
 gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here')
 gui.add(guiParameters, 'openWebsite').name('by animanoir.xyz')
+gui.add(guiParameters, 'controls').name('Controls:').disable()
 gui.add(guiParameters , 'isMusicOn').name('Music:').onChange((value) => {
   isMusicOn = value;
   if (isMusicOn) {
