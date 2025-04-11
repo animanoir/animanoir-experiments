@@ -299,6 +299,7 @@ const fetchArenaImages = async (channel) => {
 }
 
 // Use the Promise with .then()
+
 fetchArenaImages('metaxis-digital').then(images => {
   console.info('Arena images loaded:', images);
   
@@ -324,8 +325,8 @@ fetchArenaImages('metaxis-digital').then(images => {
         transparent: true
       });
       const simplePlaneMesh = new THREE.Mesh(simplePlaneGeometry, simplePlaneMaterial);
-      simplePlaneMesh.position.x = (Math.random() - 0.5) * 5.0
-      simplePlaneMesh.position.y = (Math.random() - 0.5) * 5.0
+      simplePlaneMesh.position.x = (Math.random() - 0.5) * 6.0
+      simplePlaneMesh.position.y = (Math.random() - 0.5) * 6.0
       simplePlaneMesh.position.z = Math.random() * 5 - 3
       scene.add(simplePlaneMesh);
       simplePlaneMesh.lookAt(camera.position)
@@ -446,7 +447,7 @@ let controls
 controls = new FlyControls( camera, renderer.domElement);
 
 controls.movementSpeed = 0.5;
-controls.rollSpeed = 0.3;
+controls.rollSpeed = 0.5;
 controls.autoForward = false;
 controls.dragToLook = true;
 
