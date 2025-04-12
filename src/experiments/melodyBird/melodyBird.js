@@ -20,6 +20,24 @@ let isMusicOn = true
 let birdModel;
 let cameraFov = 75
 
+// Define movement variables at the top level of your script
+let moveLeft = false;
+let moveRight = false;
+const maxSpeed = 5.0; 
+const maxXDistance = 5; // Maximum distance from center
+const acceleration = 3.0
+const decceleration = 5.0
+
+// Add these variables at the top level with your other camera variables
+let cameraOffsetXTarget = 0;
+let currentCameraOffsetX = 0;
+const cameraFollowSpeed = 0.5; // How quickly the camera follows the bird's X movement
+const maxCameraXOffset = 0.8;  // Maximum camera offset in X direction
+
+// Add these variables at the top level with your other movement variables
+const maxRollAngle = 1.0; // Maximum roll angle in radians (about 17 degrees)
+let targetRollAngle = 0; // Target roll angle that changes based on movement
+
 
 /**
  * ========================================
@@ -319,11 +337,13 @@ const cloudMaterial = new THREE.ShaderMaterial({
   transparent: true,
   uniforms: {
     uTime: { value: 0.0 },
-    uTexture: { value: cloudTexture }
+    uTexture: { value: cloudTexture },
+    uAlphaFactor: {value: 0.3}
   },
   vertexShader: `
     varying vec2 vUv;
     uniform float uTime;
+
     
     void main() {
       vUv = uv;
@@ -340,14 +360,16 @@ const cloudMaterial = new THREE.ShaderMaterial({
     varying vec2 vUv;
     uniform sampler2D uTexture;
     uniform float uTime;
+    uniform float uAlphaFactor;
     
     void main() {
       vec4 texColor = texture2D(uTexture, vUv);
+      float alphaFactor = 0.3;
       
       // Add soft edge fading
       float alpha = texColor.a;
       alpha *= smoothstep(0.0, 0.2, vUv.x) * smoothstep(0.0, 0.2, vUv.y);
-      alpha *= smoothstep(0.0, 0.2, 1.0 - vUv.x) * smoothstep(0.0, 0.2, 1.0 - vUv.y) * 0.3;
+      alpha *= smoothstep(0.0, 0.2, 1.0 - vUv.x) * smoothstep(0.0, 0.2, 1.0 - vUv.y) * uAlphaFactor;
       
       // Soft pulsing opacity
       alpha *= 0.8 + 0.2 * sin(uTime * 0.2 + vUv.x * vUv.y * 5.0);
@@ -364,28 +386,33 @@ function createCloudParticles() {
   for (let i = 0; i < cloudParticleCount; i++) {
     // Create a new geometry for each cloud with different dimensions
     const cloudGeometry = new THREE.PlaneGeometry(
-      10 + Math.random() * 10,  // Width between 5 and 15
-      6 + Math.random() * 5    // Height between 3 and 8
+      10 + Math.random() * 10,
+      6 + Math.random() * 5
     );
     
+    // Create a unique material for each cloud
+    const individualCloudMaterial = cloudMaterial.clone();
+    // Each material has its own set of uniforms
+    individualCloudMaterial.uniforms = {
+      uTime: { value: 0.0 },
+      uTexture: { value: cloudTexture },
+      uAlphaFactor: { value: 0.3 }
+    };
     
-    const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+    const cloud = new THREE.Mesh(cloudGeometry, individualCloudMaterial);
     
-    // Distribute clouds in 3D space
-    // Wide spread on X, moderate height on Y, deep distribution on Z
+    // Store the material directly on the cloud object for easy access
+    cloud.cloudMaterial = individualCloudMaterial;
+    
+    // Position, rotation, speed setup...
     cloud.position.set(
-      (Math.random() - 0.5) * 40,    // X: -20 to 20
-      Math.random() * 10,        // Y: 5 to 15 (above the bird)
-      (Math.random() - 0.2) * 100    // Z: mostly ahead of the bird (-20 to 80)
+      (Math.random() - 0.5) * 40,
+      Math.random() * 10,
+      (Math.random() - 0.2) * 100
     );
-    
-    // Slight random rotation for variety
     cloud.rotation.z = Math.random() * Math.PI * 0.1;
-    
-    // Set custom speed property to make each cloud move at different speeds
     cloud.speed = 0.5 + Math.random() * 1.5;
     
-    // Add to scene and store in our array
     scene.add(cloud);
     cloudParticles.push(cloud);
   }
@@ -525,11 +552,72 @@ perlin.init();
  */
 let mainClock = new THREE.Clock
 let previousTime = 0.0
+let currentVelocityX = 0.0; // Initialize current velocity
+
 function animate(){
   requestAnimationFrame(animate);
   const elapsedTime = mainClock.getElapsedTime();
-  const deltaTime = elapsedTime - previousTime
-  previousTime = elapsedTime
+  const deltaTime = elapsedTime - previousTime;
+  previousTime = elapsedTime;
+  
+  // Handle bird movement inside the animation loop with smooth acceleration
+  if(birdModel) {
+    // Calculate target velocity based on input
+    let targetVelocityX = 0;
+    
+    if(moveLeft && birdModel.position.x < maxXDistance) {
+      targetVelocityX = maxSpeed;
+      targetRollAngle = -maxRollAngle; // Roll right when moving left
+    } else if(moveRight && birdModel.position.x > -maxXDistance) {
+      targetVelocityX = -maxSpeed;
+      targetRollAngle = maxRollAngle; // Roll left when moving right
+    } else {
+      targetRollAngle = 0; // Return to level when not moving laterally
+    }
+
+    // Smoothly interpolate current velocity toward target velocity
+    if(targetVelocityX !== 0) {
+      // Accelerating
+      currentVelocityX = THREE.MathUtils.lerp(
+        currentVelocityX,
+        targetVelocityX,
+        acceleration * deltaTime
+      );
+    } else {
+      // Decelerating (when no keys are pressed)
+      currentVelocityX = THREE.MathUtils.lerp(
+        currentVelocityX,
+        0,
+        decceleration * deltaTime
+      );
+    }
+    
+    // Apply velocity
+    birdModel.position.x += currentVelocityX * deltaTime;
+    
+    // Constrain position within bounds
+    birdModel.position.x = THREE.MathUtils.clamp(
+      birdModel.position.x, 
+      -maxXDistance, 
+      maxXDistance
+    );
+    
+    // Smoother rotation based on velocity rather than input directly
+    // This makes the bird lean into turns more naturally
+    const targetRotationZ = -currentVelocityX * 0.02; // Scale factor for rotation amount
+    birdModel.rotation.z = THREE.MathUtils.lerp(
+      birdModel.rotation.z,
+      targetRotationZ,
+      5.0 * deltaTime
+    );
+    
+    // Add a roll effect (rotation around forward axis) when turning
+    birdModel.rotation.z = THREE.MathUtils.lerp(
+      birdModel.rotation.z,
+      targetRollAngle,
+      3.0 * deltaTime // Slightly slower than the turning effect
+    );
+  }
   
   // Update cloud shader uniform
   cloudMaterial.uniforms.uTime.value = elapsedTime * 1.2;
@@ -542,6 +630,12 @@ function animate(){
     
     // When a cloud passes beyond the camera, reset its position far ahead
     if (cloud.position.z < camera.position.z - 10) {
+      // Now this will work because cloud.cloudMaterial exists
+      gsap.fromTo(cloud.cloudMaterial.uniforms.uAlphaFactor, 
+        {value: 0.0}, 
+        {value: 0.3, duration: 3}
+      );
+      
       cloud.position.z = camera.position.z + 20 + Math.random() * 20;
       cloud.position.x = (Math.random() - 0.5) * 40;
       cloud.position.y = Math.random() * 10;
@@ -553,24 +647,42 @@ function animate(){
     controls.enabled = false;
 
     // Use Perlin noise for camera movement
-    const noiseScale = 0.3; // Controls how fast the noise pattern changes
-    const noiseAmplitude = 0.4; // Controls how much the camera moves
+    const noiseScale = 0.3; 
+    const noiseAmplitude = 0.4;
     
-    // Get noise values for X and Y offsets
-    const cameraOffsetX = perlin.noise(elapsedTime * noiseScale) * noiseAmplitude;
+    // Get noise values for Y offset only
     const cameraOffsetY = perlin.noise(elapsedTime * noiseScale + 100) * noiseAmplitude;
     
-    // Position camera behind and slightly above the bird, with Perlin noise offsets
-    camera.position.x = birdModel.position.x + cameraOffsetX;
-    camera.position.y = birdModel.position.y + 3.0 + cameraOffsetY;
-    camera.position.z = birdModel.position.z - 5;
+    // Update camera offset target based on movement input
+    if (moveLeft) {
+      cameraOffsetXTarget = maxCameraXOffset; // Camera moves right as bird moves left
+    } else if (moveRight) {
+      cameraOffsetXTarget = -maxCameraXOffset; // Camera moves left as bird moves right
+    } else {
+      cameraOffsetXTarget = 0; // Return to center when no keys pressed
+    }
     
-    const lookAheadDistance = 8.0
+    // Smoothly interpolate current camera offset toward target
+    currentCameraOffsetX = THREE.MathUtils.lerp(
+      currentCameraOffsetX,
+      cameraOffsetXTarget,
+      deltaTime * cameraFollowSpeed
+    );
+    
+    // Fixed camera position with no dependency on bird's X position
+    // Only follow the bird in Z direction, keep X at center (0) plus offset
+    const lookAheadDistance = 5.0
     const cameraTargetPoint = new THREE.Vector3(
-      birdModel.position.x + cameraOffsetX * 0.5, // Add slight offset to look direction too
+      0, // Fixed X at center
       birdModel.position.y + cameraOffsetY * 0.5,
       birdModel.position.z + lookAheadDistance 
     )
+    
+    // Position camera with fixed X position (perlin noise + movement-based offset)
+    camera.position.x = cameraOffsetY * 0.5 + currentCameraOffsetX; 
+    camera.position.y = birdModel.position.y + 4 + cameraOffsetY;
+    camera.position.z = birdModel.position.z - 5.0;
+    
     camera.lookAt(cameraTargetPoint);
   } else {
     controls.update();
@@ -583,6 +695,24 @@ function animate(){
   
   // Render the scene
   effectComposer.render()
+}
+
+// Update your key handlers to set flags instead of directly moving the bird
+document.onkeydown = (e) => {
+  if(e.key === "a" || e.key === "A") {
+    moveLeft = true;
+  } else if(e.key === "d" || e.key === "D") {
+    moveRight = true;
+  }
+}
+
+// Add key up handler to stop movement when keys are released
+document.onkeyup = (e) => {
+  if(e.key === "a" || e.key === "A") {
+    moveLeft = false;
+  } else if(e.key === "d" || e.key === "D") {
+    moveRight = false;
+  }
 }
 
 animate();
