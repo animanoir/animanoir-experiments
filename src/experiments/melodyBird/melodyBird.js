@@ -39,13 +39,16 @@ const cameraFollowSpeed = 0.5; // How quickly the camera follows the bird's X mo
 const maxCameraXOffset = 0.8;  // Maximum camera offset in X direction
 
 // Add these variables at the top level with your other movement variables
-const maxRollAngle = 1.0; // Maximum roll angle in radians (about 17 degrees)
+const maxRollAngle = 0.8;
 let targetRollAngle = 0; // Target roll angle that changes based on movement
 
 // Add these variables at the top level of your script
 let currentVelocityY = 0.0; // Initialize vertical velocity
 const maxYDistance = 8; // Maximum distance up/down from center
 
+// At the top level, add a variable for pitch-based roll
+const maxPitchRollAngle = 0.2; // Maximum roll angle from pitch (climbing/diving)
+let targetPitchRollAngle = 0;
 
 /**
  * ========================================
@@ -586,8 +589,12 @@ function animate(){
     // Add vertical movement targets
     if(moveUp && birdModel.position.y < maxYDistance) {
       targetVelocityY = maxSpeed * 0.7; // Slightly slower vertical movement
+      targetPitchRollAngle = maxPitchRollAngle; // Roll slightly when climbing
     } else if(moveDown && birdModel.position.y > -maxYDistance/2) { // Less distance downward
       targetVelocityY = -maxSpeed * 0.7;
+      targetPitchRollAngle = -maxPitchRollAngle; // Roll slightly in the opposite direction when diving
+    } else {
+      targetPitchRollAngle = 0;
     }
 
     // Smoothly interpolate current X velocity
@@ -645,20 +652,19 @@ function animate(){
       4.0 * deltaTime
     );
     
+    // Combine the turning roll and the pitch roll for more natural flight
+    // The pitch roll is added on top of the existing turning roll
+    const combinedRollAngle = targetRollAngle + targetPitchRollAngle;
+    
     // Smoother rotation based on velocity rather than input directly
     // This makes the bird lean into turns more naturally
-    const targetRotationZ = -currentVelocityX * 0.02; // Scale factor for rotation amount
-    birdModel.rotation.z = THREE.MathUtils.lerp(
-      birdModel.rotation.z,
-      targetRotationZ,
-      5.0 * deltaTime
-    );
+    const targetRotationZ = -currentVelocityX * 0.2; // Scale factor for rotation amount
     
-    // Add a roll effect (rotation around forward axis) when turning
+    // Apply the combined roll angle (from turning and pitch)
     birdModel.rotation.z = THREE.MathUtils.lerp(
       birdModel.rotation.z,
-      targetRollAngle,
-      3.0 * deltaTime // Slightly slower than the turning effect
+      combinedRollAngle,
+      3.0 * deltaTime
     );
   }
   
