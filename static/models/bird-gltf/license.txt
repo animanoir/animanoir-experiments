@@ -1,0 +1,11 @@
+Model Information:
+* title:	Bird Animations Alex
+* source:	https://sketchfab.com/3d-models/bird-animations-alex-081fa7f0cfd649b9b07babb4c619acc7
+* author:	ahitch3 (https://sketchfab.com/ahitch3)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Bird Animations Alex" (https://sketchfab.com/3d-models/bird-animations-alex-081fa7f0cfd649b9b07babb4c619acc7) by ahitch3 (https://sketchfab.com/ahitch3) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

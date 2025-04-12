@@ -449,7 +449,7 @@ effectComposer.setSize(sizes.width, sizes.height)
 effectComposer.setPixelRatio(getPixelRatio())
 const renderPass = new RenderPass(scene, camera)
 effectComposer.addPass(renderPass)
-effectComposer.addPass(unrealBloomPass)
+// effectComposer.addPass(unrealBloomPass)
 effectComposer.addPass(bokehPass)
 effectComposer.addPass(filmPass)
 

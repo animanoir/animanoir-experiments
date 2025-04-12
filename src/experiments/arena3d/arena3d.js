@@ -9,7 +9,6 @@ import gsap from 'gsap';
 import GUI from 'lil-gui';
 import * as Tone from "tone"
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 
 
