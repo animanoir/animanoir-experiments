@@ -23,6 +23,8 @@ let cameraFov = 75
 // Define movement variables at the top level of your script
 let moveLeft = false;
 let moveRight = false;
+let moveUp = false;
+let moveDown = false;
 const maxSpeed = 5.0; 
 const maxXDistance = 5; // Maximum distance from center
 const acceleration = 3.0
@@ -30,13 +32,19 @@ const decceleration = 5.0
 
 // Add these variables at the top level with your other camera variables
 let cameraOffsetXTarget = 0;
+let cameraOffsetZTarget = 0;
 let currentCameraOffsetX = 0;
+let currentCameraOffsetZ = 0;
 const cameraFollowSpeed = 0.5; // How quickly the camera follows the bird's X movement
 const maxCameraXOffset = 0.8;  // Maximum camera offset in X direction
 
 // Add these variables at the top level with your other movement variables
 const maxRollAngle = 1.0; // Maximum roll angle in radians (about 17 degrees)
 let targetRollAngle = 0; // Target roll angle that changes based on movement
+
+// Add these variables at the top level of your script
+let currentVelocityY = 0.0; // Initialize vertical velocity
+const maxYDistance = 8; // Maximum distance up/down from center
 
 
 /**
@@ -47,7 +55,6 @@ let targetRollAngle = 0; // Target roll angle that changes based on movement
 
 const gui = new GUI({title: "Melody Bird (WIP)"});
 const guiParameters = {
-  cameraFov: 75,
   openWebsite: function() {
     window.open('https://www.animanoir.xyz/', '_blank');
   },
@@ -564,27 +571,33 @@ function animate(){
   if(birdModel) {
     // Calculate target velocity based on input
     let targetVelocityX = 0;
+    let targetVelocityY = 0;
     
     if(moveLeft && birdModel.position.x < maxXDistance) {
       targetVelocityX = maxSpeed;
-      targetRollAngle = -maxRollAngle; // Roll right when moving left
+      targetRollAngle = -maxRollAngle;
     } else if(moveRight && birdModel.position.x > -maxXDistance) {
       targetVelocityX = -maxSpeed;
-      targetRollAngle = maxRollAngle; // Roll left when moving right
+      targetRollAngle = maxRollAngle;
     } else {
-      targetRollAngle = 0; // Return to level when not moving laterally
+      targetRollAngle = 0;
+    }
+    
+    // Add vertical movement targets
+    if(moveUp && birdModel.position.y < maxYDistance) {
+      targetVelocityY = maxSpeed * 0.7; // Slightly slower vertical movement
+    } else if(moveDown && birdModel.position.y > -maxYDistance/2) { // Less distance downward
+      targetVelocityY = -maxSpeed * 0.7;
     }
 
-    // Smoothly interpolate current velocity toward target velocity
+    // Smoothly interpolate current X velocity
     if(targetVelocityX !== 0) {
-      // Accelerating
       currentVelocityX = THREE.MathUtils.lerp(
         currentVelocityX,
         targetVelocityX,
         acceleration * deltaTime
       );
     } else {
-      // Decelerating (when no keys are pressed)
       currentVelocityX = THREE.MathUtils.lerp(
         currentVelocityX,
         0,
@@ -592,14 +605,44 @@ function animate(){
       );
     }
     
-    // Apply velocity
-    birdModel.position.x += currentVelocityX * deltaTime;
+    // Smoothly interpolate current Y velocity
+    if(targetVelocityY !== 0) {
+      currentVelocityY = THREE.MathUtils.lerp(
+        currentVelocityY,
+        targetVelocityY,
+        acceleration * deltaTime
+      );
+    } else {
+      currentVelocityY = THREE.MathUtils.lerp(
+        currentVelocityY,
+        0,
+        decceleration * deltaTime
+      );
+    }
     
-    // Constrain position within bounds
+    // Apply velocities
+    birdModel.position.x += currentVelocityX * deltaTime;
+    birdModel.position.y += currentVelocityY * deltaTime;
+    
+    // Constrain positions within bounds
     birdModel.position.x = THREE.MathUtils.clamp(
       birdModel.position.x, 
       -maxXDistance, 
       maxXDistance
+    );
+    
+    birdModel.position.y = THREE.MathUtils.clamp(
+      birdModel.position.y, 
+      -maxYDistance/2, 
+      maxYDistance
+    );
+    
+    // Add pitch effect (rotation around X axis) when moving up/down
+    const targetPitchAngle = currentVelocityY * 0.02; // Scale factor for pitch amount
+    birdModel.rotation.x = THREE.MathUtils.lerp(
+      birdModel.rotation.x,
+      targetPitchAngle,
+      4.0 * deltaTime
     );
     
     // Smoother rotation based on velocity rather than input directly
@@ -647,8 +690,8 @@ function animate(){
     controls.enabled = false;
 
     // Use Perlin noise for camera movement
-    const noiseScale = 0.3; 
-    const noiseAmplitude = 0.4;
+    const noiseScale = 0.25; 
+    const noiseAmplitude = 0.35;
     
     // Get noise values for Y offset only
     const cameraOffsetY = perlin.noise(elapsedTime * noiseScale + 100) * noiseAmplitude;
@@ -668,10 +711,16 @@ function animate(){
       cameraOffsetXTarget,
       deltaTime * cameraFollowSpeed
     );
+
+    currentCameraOffsetZ = THREE.MathUtils.lerp(
+      currentCameraOffsetZ,
+      cameraOffsetZTarget,
+      deltaTime * cameraFollowSpeed
+    )
     
     // Fixed camera position with no dependency on bird's X position
     // Only follow the bird in Z direction, keep X at center (0) plus offset
-    const lookAheadDistance = 5.0
+    const lookAheadDistance = 8.0
     const cameraTargetPoint = new THREE.Vector3(
       0, // Fixed X at center
       birdModel.position.y + cameraOffsetY * 0.5,
@@ -680,14 +729,15 @@ function animate(){
     
     // Position camera with fixed X position (perlin noise + movement-based offset)
     camera.position.x = cameraOffsetY * 0.5 + currentCameraOffsetX; 
-    camera.position.y = birdModel.position.y + 4 + cameraOffsetY;
-    camera.position.z = birdModel.position.z - 5.0;
+    camera.position.y = birdModel.position.y + 1 + cameraOffsetY;
+    camera.position.z = birdModel.position.z - 5.0 + currentCameraOffsetZ;
     
     camera.lookAt(cameraTargetPoint);
   } else {
     controls.update();
   }
 
+  camera.rotateZ(Math.PI * Math.sin(elapsedTime * 0.5) * 0.1)
   // Animation mixer
   if(birdModelMixer != null){
     birdModelMixer.update(deltaTime)
@@ -703,6 +753,10 @@ document.onkeydown = (e) => {
     moveLeft = true;
   } else if(e.key === "d" || e.key === "D") {
     moveRight = true;
+  } else if(e.key === "w" || e.key === "W") {
+    moveUp = true;
+  } else if(e.key === "s" || e.key === "S") {
+    moveDown = true;
   }
 }
 
@@ -712,6 +766,10 @@ document.onkeyup = (e) => {
     moveLeft = false;
   } else if(e.key === "d" || e.key === "D") {
     moveRight = false;
+  } else if(e.key === "w" || e.key === "W") {
+    moveUp = false;
+  } else if(e.key === "s" || e.key === "S") {
+    moveDown = false;
   }
 }
 
