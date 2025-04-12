@@ -735,7 +735,7 @@ function animate(){
     
     // Position camera with fixed X position (perlin noise + movement-based offset)
     camera.position.x = cameraOffsetY * 0.5 + currentCameraOffsetX; 
-    camera.position.y = birdModel.position.y + 1 + cameraOffsetY;
+    camera.position.y = birdModel.position.y + 2.5 + cameraOffsetY;
     camera.position.z = birdModel.position.z - 5.0 + currentCameraOffsetZ;
     
     camera.lookAt(cameraTargetPoint);
