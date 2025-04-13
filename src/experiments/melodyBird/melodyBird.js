@@ -73,12 +73,9 @@ const fetchArenaData = async (channel) => {
     "Vanishing life...",
     "I miss you so, so much...",
     "This is a other random thought...",
-    "One is the distance between the words you use.",
-    "Whispers between notes",
-    "Dancing on air currents",
-    "The sky has no limits",
-    "Feathers of digital dreams",
-    "Echo through the endless blue",
+    "One is the distance between the words",
+    "A path is made by flying on it",
+    "Wandering far & unfettered!"
   ];
   
   // Return the phrases formatted like Arena content
