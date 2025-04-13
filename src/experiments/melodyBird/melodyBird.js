@@ -5,15 +5,185 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+// import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
-import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js'
+// import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js'
 import gsap from 'gsap';
 import GUI from 'lil-gui';
 import * as Tone from "tone"
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { RGBELoader } from 'three/examples/jsm/Addons.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { FontLoader } from 'three/examples/jsm/Addons.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
+/**
+ * ========================================
+ * MAIN MOTHERFUCKING SCENE
+ * ========================================
+ */
+const scene = new THREE.Scene();
+
+// const fetchArenaData = async (channel) => {
+//   return fetch(`https://api.are.na/v2/channels/${channel}/contents?per=5&sort=position&direction=desc`)
+//     .then(response => {
+//       if (!response.ok) {
+//         throw new Error('There was an error fetching from Are.na.');
+//       }
+//       return response.json();
+//     })
+//     .then(data => {
+//       const { contents } = data;
+
+//       // console.info(contents)
+//       return contents;
+//     })
+//     .catch(error => {
+//       console.error('Error fetching texts from Are.na:', error);
+//       return [];
+//     });
+// }
+
+// Store the text mesh globally so we can access it in the animation loop
+let currentTextMesh = null;
+let randomThoughtSpeedTowardsCamera = 3.0; // Speed at which text moves towards camera
+
+let globalFont
+const fontLoader = new FontLoader()
+fontLoader.load(
+  '/font/Roboto_Regular.json', 
+  (font) => {
+    globalFont = font
+  },
+  // Optional progress callback
+  (xhr) => {
+    // console.log((xhr.loaded / xhr.total * 100) + '% loaded')
+  },
+  // Optional error callback
+  (error) => {
+    console.error('Font loading error:', error)
+  }
+)
+
+const fetchArenaData = async (channel) => {
+  // For now, return hardcoded phrases instead of fetching from Are.na
+  randomPhrases = [
+    "What if, but for eternity?",
+    "Vanishing life...",
+    "I miss you so, so much...",
+    "This is a other random thought...",
+    "One is the distance between the words you use.",
+    "Whispers between notes",
+    "Dancing on air currents",
+    "The sky has no limits",
+    "Feathers of digital dreams",
+    "Echo through the endless blue",
+  ];
+  
+  // Return the phrases formatted like Arena content
+  return randomPhrases.map(phrase => ({
+    content: phrase
+  }));
+}
+
+let randomPhrases
+
+// Modify the function to handle font loading properly
+function createNewText() {
+  fetchArenaData('feed-the-melody-bird').then(texts => {
+    // Check if we have texts
+    if (texts && texts.length > 0) {
+      
+      // If font is already loaded, create text immediately
+      if (globalFont) {
+        createTextWithLoadedFont(texts);
+      } else {
+        // If font is not loaded yet, wait for it
+        console.log("Font not loaded yet. Waiting...");
+        const checkFontInterval = setInterval(() => {
+          if (globalFont) {
+            console.log("Font now loaded, creating text");
+            clearInterval(checkFontInterval);
+            createTextWithLoadedFont(texts);
+          }
+        }, 100); // Check every 100ms
+        
+        // Also set a timeout to prevent infinite checking
+        setTimeout(() => {
+          clearInterval(checkFontInterval);
+          console.error("Font loading timed out");
+        }, 5000);
+      }
+    } else {
+      console.error("No texts available to display");
+    }
+  });
+}
+
+// Helper function to create text once the font is loaded
+function createTextWithLoadedFont(texts) {
+  // Choose a random text from the available texts
+  const randomIndex = Math.floor(Math.random() * texts.length);
+  const selectedText = texts[randomIndex];
+  
+  if (selectedText && selectedText.content) {
+    console.log("Selected text: "+selectedText.content)
+    // Create text geometry
+    const textGeometry = new TextGeometry(selectedText.content, {
+      font: globalFont,
+      size: 0.3,
+      height: 0.1,
+      depth: 0.1
+    });
+    
+    // Center the text geometry
+    textGeometry.computeBoundingBox();
+    textGeometry.center();
+    // Create a material for the text with fade-in effect
+    const textMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x000,
+      metalness: 0.0,
+      roughness: 1.0,
+      transparent: false,
+      opacity: 0.0 // Start transparent for fade-in effect
+    });
+    
+    // Create a mesh with the geometry and material
+    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+    textMesh.scale.x = -1.0;
+    
+    // Position the text far ahead of the camera
+    // textMesh.position.set(
+    //   0, // Centered horizontally
+    //   birdModel ? birdModel.position.y + 2 : 2, // Slightly above the bird
+    //   camera.position.z + 40 // Start far ahead
+    // );
+
+    textMesh.position.set(Math.random() * 2.0,Math.random() * 5.0,20)
+
+    
+    // Remove the previous text if it exists
+    if (currentTextMesh) {
+      scene.remove(currentTextMesh);
+    }
+    
+    // Store the new text mesh globally
+    currentTextMesh = textMesh;
+    
+    // Add the mesh to the scene
+    scene.add(textMesh);
+    
+    // Fade in the text
+    gsap.to(textMesh.material, {
+      opacity: 1.0,
+      duration: 5.0
+    });
+  }
+}
+
+// Call createNewText initially to show the first text
+createNewText();
 
 let musicPlaybackRate = 1.0
 let isMusicOn = true
@@ -136,12 +306,7 @@ const loadingManager = new THREE.LoadingManager(
 )
 
 
-/**
- * ========================================
- * MAIN MOTHERFUCKING SCENE
- * ========================================
- */
-const scene = new THREE.Scene();
+
 
 /**
  * ========================================
@@ -188,26 +353,19 @@ scene.add(camera)
 
 /**
  * ========================================
- * POST-PROCESSING CONFIGURATION
+ * SCENE AND ENVIRONMENT SETUP
  * ========================================
  */
-const unrealBloomPass = new UnrealBloomPass()
-unrealBloomPass.strength = 0.5
-unrealBloomPass.radius = 0.5
-unrealBloomPass.threshold = 0.8
+const canvas = document.querySelector('canvas#maincanvas')
+const rgbeLoader = new RGBELoader(loadingManager)
+rgbeLoader.load('/environmentmaps/hdrs/puresky-4k.hdr', (hdrEnvMap) => {
+  hdrEnvMap.mapping = THREE.EquirectangularReflectionMapping
+scene.background = hdrEnvMap
+scene.environment = hdrEnvMap
 
-const filmPass = new FilmPass(
-  0.2,  // noise intensity
-)
-
-// Configure BokehPass with appropriate parameters
-const bokehPass = new BokehPass(scene, camera, {
-  focus: 1.2,        // Focus distance (adjust based on your scene)
-  aperture: 0.0025,  // Aperture - smaller values give more pronounced bokeh
-  maxblur: 0.01,     // Maximum blur amount
-  width: window.innerWidth,
-  height: window.innerHeight
 })
+// scene.backgroundBlurriness = 0.05
+
 
 /**
  * ========================================
@@ -233,22 +391,6 @@ function mapRange(value, fromMin, fromMax, toMin, toMax) {
   // Then scale to target range
   return toMin + normalizedValue * (toMax - toMin);
 }
-
-/**
- * ========================================
- * SCENE AND ENVIRONMENT SETUP
- * ========================================
- */
-const canvas = document.querySelector('canvas#maincanvas')
-const rgbeLoader = new RGBELoader(loadingManager)
-rgbeLoader.load('/environmentmaps/hdrs/puresky-4k.hdr', (hdrEnvMap) => {
-  hdrEnvMap.mapping = THREE.EquirectangularReflectionMapping
-scene.background = hdrEnvMap
-scene.environment = hdrEnvMap
-
-})
-// scene.backgroundBlurriness = 0.05
-
 
 /**
  * ========================================
@@ -311,7 +453,7 @@ gltfLoader.load('/models/bird-gltf/scene.gltf', (model) => {
  */
 
 // Debug helper
-const axesHelper = new THREE.AxesHelper(5);
+// const axesHelper = new THREE.AxesHelper(5);
 // scene.add(axesHelper);
 
 
@@ -465,13 +607,19 @@ controls.update();
  * POST-PROCESSING SETUP
  * ========================================
  */
+
 const effectComposer = new EffectComposer(renderer)
 effectComposer.setSize(sizes.width, sizes.height)
 effectComposer.setPixelRatio(getPixelRatio())
 const renderPass = new RenderPass(scene, camera)
+let fxaaPass = new ShaderPass( FXAAShader );
+
+const filmPass = new FilmPass(
+  0.2,  // noise intensity
+)
+
+effectComposer.addPass(fxaaPass)
 effectComposer.addPass(renderPass)
-// effectComposer.addPass(unrealBloomPass)
-// effectComposer.addPass(bokehPass)
 effectComposer.addPass(filmPass)
 
 /**
@@ -554,6 +702,13 @@ const perlin = {
 
 // Initialize the Perlin noise
 perlin.init();
+
+
+/**
+ * ========================================
+ * 3D TEXT
+ * ========================================
+ */
 
 /**
  * ========================================
@@ -658,7 +813,7 @@ function animate(){
     
     // Smoother rotation based on velocity rather than input directly
     // This makes the bird lean into turns more naturally
-    const targetRotationZ = -currentVelocityX * 0.2; // Scale factor for rotation amount
+    // const targetRotationZ = -currentVelocityX * 0.2; // Scale factor for rotation amount
     
     // Apply the combined roll angle (from turning and pitch)
     birdModel.rotation.z = THREE.MathUtils.lerp(
@@ -747,6 +902,18 @@ function animate(){
   // Animation mixer
   if(birdModelMixer != null){
     birdModelMixer.update(deltaTime)
+  }
+  
+  // Move the text towards the camera
+  if (currentTextMesh) {
+    // Move text towards camera
+    currentTextMesh.position.z -= randomThoughtSpeedTowardsCamera * deltaTime;
+
+    
+    // If the text is behind the camera, create a new one
+    if (currentTextMesh.position.z < camera.position.z - 5) {
+      createNewText();
+    }
   }
   
   // Render the scene
