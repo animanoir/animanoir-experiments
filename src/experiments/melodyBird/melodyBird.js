@@ -223,7 +223,7 @@ let targetPitchRollAngle = 0;
  * ========================================
 */
 
-const gui = new GUI({title: "Melody Bird (WIP)"});
+const gui = new GUI({title: "Melody Bird (WIP)", width: 250});
 const guiParameters = {
   openWebsite: function() {
     window.open('https://www.animanoir.xyz/', '_blank');
@@ -231,11 +231,13 @@ const guiParameters = {
   openMoreExperimentsWebsite: function() {
     window.open('https://animanoir-experiments.netlify.app/', '_blank');
   },
-  isMusicOn: true
+  isMusicOn: true,
+  controls: "Move: WASD keys"
 }
 
 gui.add(guiParameters, 'openMoreExperimentsWebsite').name('+ experiments here')
 gui.add(guiParameters, 'openWebsite').name('by animanoir.xyz')
+gui.add(guiParameters, 'controls').name('Controls:').disable()
 gui.add(guiParameters , 'isMusicOn').name('Music:').onChange((value) => {
   isMusicOn = value;
   if (isMusicOn) {

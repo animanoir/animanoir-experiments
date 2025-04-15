@@ -11,8 +11,6 @@ import * as Tone from "tone"
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 
 
-
-
 /**
  * ========================================
  * GLOBAL USEFUL VARIABLES
