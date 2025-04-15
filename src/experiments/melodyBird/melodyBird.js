@@ -58,7 +58,7 @@ const fetchArenaData = async (channel) => {
     return Promise.resolve(thoughtsArray);
   }
   
-  return fetch(`https://api.are.na/v2/channels/${channel}/contents?per=10&sort=position&direction=desc`)
+  return fetch(`https://api.are.na/v2/channels/${channel}/contents?per=20&sort=position&direction=desc`)
     .then(response => {
       if (!response.ok) {
         throw new Error('There was an error fetching from Are.na.');
