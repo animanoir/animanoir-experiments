@@ -11,7 +11,7 @@ import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js'
 import gsap from 'gsap';
 import GUI from 'lil-gui';
 import * as Tone from "tone"
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
+// import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { RGBELoader } from 'three/examples/jsm/Addons.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/examples/jsm/Addons.js';
@@ -25,29 +25,12 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
  */
 const scene = new THREE.Scene();
 
-// const fetchArenaData = async (channel) => {
-//   return fetch(`https://api.are.na/v2/channels/${channel}/contents?per=5&sort=position&direction=desc`)
-//     .then(response => {
-//       if (!response.ok) {
-//         throw new Error('There was an error fetching from Are.na.');
-//       }
-//       return response.json();
-//     })
-//     .then(data => {
-//       const { contents } = data;
 
-//       // console.info(contents)
-//       return contents;
-//     })
-//     .catch(error => {
-//       console.error('Error fetching texts from Are.na:', error);
-//       return [];
-//     });
-// }
-
-// Store the text mesh globally so we can access it in the animation loop
-let currentTextMesh = null;
-let randomThoughtSpeedTowardsCamera = 3.0; // Speed at which text moves towards camera
+/**
+ * ========================================
+ * FETCHING & 3D TEXT SYSTEM
+ * ========================================
+ */
 
 let globalFont
 const fontLoader = new FontLoader()
@@ -66,63 +49,96 @@ fontLoader.load(
   }
 )
 
+let thoughtsArray = [];
+let isDataFetched = false;
+
 const fetchArenaData = async (channel) => {
-  // For now, return hardcoded phrases instead of fetching from Are.na
-  randomPhrases = [
-    "What if, but for eternity?",
-    "Vanishing life...",
-    "I miss you so, so much...",
-    "This is a other random thought...",
-    "One is the distance between the words",
-    "A path is made by flying on it",
-    "Wandering far & unfettered!"
-  ];
+  // If we've already fetched data, don't fetch again
+  if (isDataFetched) {
+    return Promise.resolve(thoughtsArray);
+  }
   
-  // Return the phrases formatted like Arena content
-  return randomPhrases.map(phrase => ({
-    content: phrase
-  }));
+  return fetch(`https://api.are.na/v2/channels/${channel}/contents?per=10&sort=position&direction=desc`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('There was an error fetching from Are.na.');
+      }
+      return response.json();
+    })
+    .then(data => {
+      const { contents } = data;
+      thoughtsArray = contents;
+      isDataFetched = true;
+      console.info("Arena data fetched:", thoughtsArray);
+      return contents;
+    })
+    .catch(error => {
+      console.error('Error fetching thoughtsArray from Are.na:', error);
+      // Use fallback data in case of error
+      thoughtsArray = [
+        { content: "What if, but for eternity?" },
+        { content: "Vanishing life..." },
+        { content: "I miss you so, so much..." },
+        { content: "One is the distance between the words" },
+        { content: "A path is made by flying on it" },
+        { content: "Wandering far & unfettered!" }
+      ];
+      isDataFetched = true;
+      return thoughtsArray;
+    });
 }
 
-let randomPhrases
+// Initialize the application only after data is fetched
+function initializeAfterDataFetch() {
+  fetchArenaData('feed-the-melody-bird')
+    .then(() => {
+      // Now that we have data, create the first text
+      createNewText();
+      // Continue with the rest of your initialization if needed
+    });
+}
 
-// Modify the function to handle font loading properly
+// Call this function to start the initialization process
+initializeAfterDataFetch();
+
+// Store the text mesh globally so we can access it in the animation loop
+let currentTextMesh = null;
+let randomThoughtSpeedTowardsCamera = 3.0;
+
 function createNewText() {
-  fetchArenaData('feed-the-melody-bird').then(texts => {
-    // Check if we have texts
-    if (texts && texts.length > 0) {
-      
-      // If font is already loaded, create text immediately
+  // Check if we have thoughtsArray
+  if (!isDataFetched || !thoughtsArray || thoughtsArray.length === 0) {
+    console.log("No data available yet, waiting...");
+    return; // Exit if data isn't available
+  }
+  
+  // If font is already loaded, create text immediately
+  if (globalFont) {
+    createTextWithLoadedFont(thoughtsArray);
+  } else {
+    // If font is not loaded yet, wait for it
+    console.log("Font not loaded yet. Waiting...");
+    const checkFontInterval = setInterval(() => {
       if (globalFont) {
-        createTextWithLoadedFont(texts);
-      } else {
-        // If font is not loaded yet, wait for it
-        console.log("Font not loaded yet. Waiting...");
-        const checkFontInterval = setInterval(() => {
-          if (globalFont) {
-            console.log("Font now loaded, creating text");
-            clearInterval(checkFontInterval);
-            createTextWithLoadedFont(texts);
-          }
-        }, 100); // Check every 100ms
-        
-        // Also set a timeout to prevent infinite checking
-        setTimeout(() => {
-          clearInterval(checkFontInterval);
-          console.error("Font loading timed out");
-        }, 5000);
+        console.log("Font now loaded, creating text");
+        clearInterval(checkFontInterval);
+        createTextWithLoadedFont(thoughtsArray);
       }
-    } else {
-      console.error("No texts available to display");
-    }
-  });
+    }, 100);
+    
+    // Also set a timeout to prevent infinite checking
+    setTimeout(() => {
+      clearInterval(checkFontInterval);
+      console.error("Font loading timed out");
+    }, 5000);
+  }
 }
 
 // Helper function to create text once the font is loaded
-function createTextWithLoadedFont(texts) {
-  // Choose a random text from the available texts
-  const randomIndex = Math.floor(Math.random() * texts.length);
-  const selectedText = texts[randomIndex];
+function createTextWithLoadedFont(thoughtsArray) {
+  // Choose a random text from the available thoughtsArray
+  const randomIndex = Math.floor(Math.random() * thoughtsArray.length);
+  const selectedText = thoughtsArray[randomIndex];
   
   if (selectedText && selectedText.content) {
     console.log("Selected text: "+selectedText.content)
@@ -178,9 +194,6 @@ function createTextWithLoadedFont(texts) {
     });
   }
 }
-
-// Call createNewText initially to show the first text
-createNewText();
 
 let musicPlaybackRate = 1.0
 let isMusicOn = true
@@ -305,8 +318,6 @@ const loadingManager = new THREE.LoadingManager(
 )
 
 
-
-
 /**
  * ========================================
  * LOAD OVERLAY
@@ -372,7 +383,6 @@ scene.environment = hdrEnvMap
  * ========================================
  */
 function getPixelRatio(){
-  // Using Math.min prevents a pixel ratio upper than 2, which is unnecessary
   return Math.min(window.devicePixelRatio, 2) 
 }
 /**
@@ -400,10 +410,6 @@ function mapRange(value, fromMin, fromMax, toMin, toMax) {
 const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
 scene.add(ambientLight);
 
-// Add directional light
-// const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-// directionalLight.position.set(1, 2, 3);
-// scene.add(directionalLight);
 
 /**
  * ========================================
@@ -463,6 +469,7 @@ gltfLoader.load('/models/bird-gltf/scene.gltf', (model) => {
  */
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
+  toneMapping: THREE.AgXToneMapping,
   antialias: true
 })
 renderer.setPixelRatio(getPixelRatio())
@@ -598,21 +605,19 @@ const handleResize = () => {
 window.addEventListener('resize', handleResize)
 
 // Controls (currently disabled)
-const controls = new OrbitControls(camera, renderer.domElement);
-camera.position.set( 0, 1, -3);
-controls.update();
+// const controls = new OrbitControls(camera, renderer.domElement);
+// camera.position.set( 0, 1, -3);
+// controls.update();
 /**
  * ========================================
  * POST-PROCESSING SETUP
  * ========================================
  */
-
 const effectComposer = new EffectComposer(renderer)
 effectComposer.setSize(sizes.width, sizes.height)
 effectComposer.setPixelRatio(getPixelRatio())
 const renderPass = new RenderPass(scene, camera)
 let fxaaPass = new ShaderPass( FXAAShader );
-
 const filmPass = new FilmPass(
   0.2,  // noise intensity
 )
@@ -702,13 +707,6 @@ const perlin = {
 // Initialize the Perlin noise
 perlin.init();
 
-
-/**
- * ========================================
- * 3D TEXT
- * ========================================
- */
-
 /**
  * ========================================
  * ANIMATION LOOP
@@ -716,7 +714,7 @@ perlin.init();
  */
 let mainClock = new THREE.Clock
 let previousTime = 0.0
-let currentVelocityX = 0.0; // Initialize current velocity
+let currentVelocityX = 0.0;
 
 function animate(){
   requestAnimationFrame(animate);
@@ -847,7 +845,7 @@ function animate(){
   
   // Disable orbit controls when we have the bird model
   if (birdModel) {
-    controls.enabled = false;
+    // controls.enabled = false;
 
     // Use Perlin noise for camera movement
     const noiseScale = 0.25; 
@@ -893,9 +891,7 @@ function animate(){
     camera.position.z = birdModel.position.z - 5.0 + currentCameraOffsetZ;
     
     camera.lookAt(cameraTargetPoint);
-  } else {
-    controls.update();
-  }
+  } 
 
   camera.rotateZ(Math.PI * Math.sin(elapsedTime * 0.5) * 0.1)
   // Animation mixer
