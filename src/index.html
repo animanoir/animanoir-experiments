@@ -11,66 +11,166 @@
   <meta http-equiv="cache-control" content="no-cache">
   <meta http-equiv="expires" content="0">
   <meta http-equiv="pragma" content="no-cache">
-  <link rel="stylesheet" href="./general.css">
   <title>Óscar A. Montiel | Experiments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;700&family=Karla:wght@400;700&family=Roboto+Condensed&display=swap"
+    rel="stylesheet">
 </head>
 <style>
+  :root {
+    --accent-color: #ff3e3e;
+    --text-color: #ffffff;
+    --card-bg: rgba(30, 30, 30, 0.7);
+    --card-hover-bg: rgba(50, 50, 50, 0.9);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --page-bg: #000000;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
   body {
-    background-color: black;
-  }
-
-  ul {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    flex-wrap: wrap;
-  }
-
-  li {
-    list-style: none;
-    color: white;
-    font-size: 2.5rem;
-    text-align: center;
+    background-color: var(--page-bg);
+    color: var(--text-color);
     font-family: 'Karla', sans-serif;
+    padding: 2rem;
+    min-height: 100vh;
   }
-
-  a {
-    color: white;
-    text-decoration: none;
-  }
-
-  a:hover {
-    color: red;
-  }
-
-  @media (max-width: 1000px) {
-    ul {
-      flex-direction: column;
-    }
-
-    li {
-      font-size: 4rem;
-    }
-  }
-
 
   #fixed-frame {
     position: relative;
     z-index: 100;
-    padding: 1rem;
-    color: white;
+    margin-bottom: 3rem;
   }
 
   #title {
-    margin: 0;
     font-family: 'Josefin Sans', sans-serif;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
   }
 
   #nowPlaying {
     font-family: 'Roboto Condensed', sans-serif;
-    font-size: 1.3rem;
-    margin: 0;
-    color: rgba(255, 255, 255, 0.31);
+    font-size: 1.1rem;
+    opacity: 0.5;
+    letter-spacing: 0.5px;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 2rem;
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .gallery-item {
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .gallery-link {
+    display: block;
+    padding: 2rem 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    height: 200px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .gallery-link::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    transform: scaleX(0);
+    transition: transform 0.5s ease;
+  }
+
+  .gallery-link:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    background: var(--card-hover-bg);
+  }
+
+  .gallery-link:hover::before {
+    transform: scaleX(1);
+  }
+
+  .gallery-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
+  }
+
+  .gallery-link:hover .gallery-title {
+    color: var(--accent-color);
+  }
+
+  .gallery-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    font-family: 'Roboto Condensed', sans-serif;
+  }
+
+  .gallery-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .gallery-link:hover .gallery-icon {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+
+  a {
+    color: var(--text-color);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--accent-color);
+  }
+
+  @media (max-width: 768px) {
+    body {
+      padding: 1rem;
+    }
+
+    #title {
+      font-size: 2rem;
+    }
+
+    .gallery-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .gallery-title {
+      font-size: 1.5rem;
+    }
   }
 </style>
 
@@ -80,30 +180,44 @@
       <a href="https://animanoir.xyz">
         Óscar A. Montiel
       </a>
-
     </h1>
-    <p id="nowPlaying">Three.js (& magic coding friends) Experiments
-    </p>
+    <p id="nowPlaying">Three.js (& magic coding friends) Experiments</p>
   </div>
-  <ul>
-    <li>
-      <a href="./experiments/led/index.html">
-        Led (p5.js)
+
+  <ul class="gallery-grid">
+    <li class="gallery-item">
+      <a href="./experiments/led/index.html" class="gallery-link">
+        <div class="gallery-icon">💡</div>
+        <h2 class="gallery-title">Led</h2>
+        <span class="gallery-subtitle">p5.js</span>
       </a>
     </li>
-    <li>
-      <a href="./experiments/acidBuddha/index.html">
-        Acid Buddha
+    <li class="gallery-item">
+      <a href="./experiments/acidBuddha/index.html" class="gallery-link">
+        <div class="gallery-icon">🧘</div>
+        <h2 class="gallery-title">Acid Buddha</h2>
+        <span class="gallery-subtitle">Three.js</span>
       </a>
     </li>
-    <li>
-      <a href="./experiments/arena3d/index.html">
-        3D Are.na Channel
+    <li class="gallery-item">
+      <a href="./experiments/arena3d/index.html" class="gallery-link">
+        <div class="gallery-icon">🔄</div>
+        <h2 class="gallery-title">3D Are.na Channel</h2>
+        <span class="gallery-subtitle">Three.js + API</span>
       </a>
     </li>
-    <li>
-      <a href="./experiments/melodyBird/index.html">
-        Melody Bird (WIP)
+    <li class="gallery-item">
+      <a href="./experiments/melodyBird/index.html" class="gallery-link">
+        <div class="gallery-icon">🐦</div>
+        <h2 class="gallery-title">Melody Bird</h2>
+        <span class="gallery-subtitle">Three.js (WIP)</span>
+      </a>
+    </li>
+    <li class="gallery-item">
+      <a href="./experiments/melodyBirdDark/index.html" class="gallery-link">
+        <div class="gallery-icon">🌙</div>
+        <h2 class="gallery-title">Melody Bird Dark</h2>
+        <span class="gallery-subtitle">Three.js (WIP)</span>
       </a>
     </li>
   </ul>

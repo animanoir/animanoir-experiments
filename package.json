@@ -14,6 +14,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@theatre/core": "^0.7.2",
+    "@theatre/studio": "^0.7.2",
     "gsap": "^3.12.7",
     "three": "^0.175.0",
     "tone": "^15.0.4",

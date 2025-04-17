@@ -20,6 +20,7 @@ export default defineConfig({
         led: resolve(__dirname, 'src/experiments/led/index.html'),
         arena3d: resolve(__dirname, 'src/experiments/arena3d/index.html'),
         melodyBird: resolve(__dirname, 'src/experiments/melodyBird/index.html'),
+        melodyBirdDark: resolve(__dirname, 'src/experiments/melodyBirdDark/index.html'),
       }
     }
   },
